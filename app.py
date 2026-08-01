@@ -848,69 +848,165 @@ def inject_styles() -> None:
           .flow-wrap {{
             display: flex;
             flex-direction: column;
-            gap: 0.55rem;
-            font-family: "Plus Jakarta Sans", ui-monospace, monospace;
-            font-size: 0.84rem;
+            gap: 0.85rem;
+            font-family: "Plus Jakarta Sans", sans-serif;
+            font-size: 0.86rem;
             line-height: 1.45;
             color: {tok["ink"]} !important;
           }}
-          .flow-layer {{
+          .arch-rail {{
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 0.45rem;
+            position: relative;
+          }}
+          @media (max-width: 980px) {{
+            .arch-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+          }}
+          .arch-step {{
+            position: relative;
             border: 1px solid {tok["line"]};
             border-radius: 14px;
-            background: {tok["panel"]};
-            padding: 0.95rem 1.05rem 1rem;
+            background: linear-gradient(180deg, {tok["panel"]} 0%, {"rgba(255,255,255,0.02)" if is_dark() else "#F8FAFC"} 100%);
+            padding: 0.85rem 0.75rem 0.9rem;
+            min-height: 132px;
             box-shadow: var(--shadow);
           }}
-          .flow-layer h4 {{
-            margin: 0 0 0.65rem 0 !important;
+          .arch-step::after {{
+            content: "→";
+            position: absolute;
+            right: -0.42rem;
+            top: 48%;
+            transform: translateY(-50%);
+            color: {tok["accent"]};
+            font-weight: 700;
+            font-size: 0.95rem;
+            z-index: 2;
+            background: {tok["bg"]};
+            border-radius: 999px;
+            width: 1.1rem;
+            height: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+          }}
+          .arch-step:last-child::after {{ content: none; }}
+          @media (max-width: 980px) {{
+            .arch-step:nth-child(2n)::after {{ content: none; }}
+          }}
+          .arch-idx {{
+            display: inline-block;
+            font-family: "Sora", sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: {tok["accent"]} !important;
+            background: {tok["accent_soft"]};
+            border: 1px solid color-mix(in srgb, {tok["accent"]} 28%, transparent);
+            border-radius: 999px;
+            padding: 0.15rem 0.45rem;
+            margin-bottom: 0.45rem;
+          }}
+          .arch-title {{
+            font-family: "Sora", sans-serif;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: {tok["ink"]} !important;
+            margin: 0 0 0.3rem 0;
+            line-height: 1.25;
+          }}
+          .arch-tech {{
+            color: {tok["muted"]} !important;
+            font-size: 0.78rem;
+            line-height: 1.4;
+            margin-bottom: 0.45rem;
+          }}
+          .arch-meta {{
+            font-size: 0.72rem;
+            font-weight: 650;
+            color: {tok["ink"]} !important;
+            font-variant-numeric: tabular-nums;
+          }}
+          .arch-lane {{
+            border: 1px solid {tok["line"]};
+            border-radius: 16px;
+            background: {tok["panel"]};
+            padding: 1rem 1.05rem 1.05rem;
+            box-shadow: var(--shadow);
+          }}
+          .arch-lane h4 {{
+            margin: 0 0 0.75rem 0 !important;
             font-family: "Sora", sans-serif !important;
-            font-size: 0.92rem !important;
-            letter-spacing: 0.04em;
+            font-size: 0.78rem !important;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
             color: {tok["accent"]} !important;
           }}
-          .flow-grid {{
+          .arch-nodes {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 0.55rem;
           }}
-          .flow-card {{
-            border: 1px dashed {tok["line"]};
-            border-radius: 10px;
-            padding: 0.55rem 0.65rem;
+          .arch-node {{
+            border: 1px solid {tok["line"]};
+            border-radius: 12px;
+            padding: 0.7rem 0.75rem;
             background: {"rgba(255,255,255,0.03)" if is_dark() else "#F8FAFC"};
           }}
-          .flow-card strong {{
+          .arch-node .k {{
             display: block;
-            font-size: 0.78rem;
-            letter-spacing: 0.03em;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             color: {tok["muted"]} !important;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.25rem;
           }}
-          .flow-card span, .flow-card code {{
+          .arch-node .v {{
+            display: block;
             color: {tok["ink"]} !important;
             font-size: 0.86rem;
+            font-weight: 600;
+            line-height: 1.35;
           }}
-          .flow-arrow {{
-            text-align: center;
+          .arch-node .s {{
+            display: block;
+            margin-top: 0.25rem;
             color: {tok["muted"]} !important;
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
+            font-size: 0.75rem;
+            font-family: ui-monospace, "Cascadia Code", monospace;
+          }}
+          .arch-connector {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            color: {tok["muted"]} !important;
+            font-size: 0.78rem;
+            font-weight: 650;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.15rem 0;
+          }}
+          .arch-connector span.line {{
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, {tok["line"]}, transparent);
+          }}
+          .arch-connector .chip {{
+            border: 1px solid {tok["line"]};
+            border-radius: 999px;
+            padding: 0.28rem 0.7rem;
+            background: {tok["accent_soft"]};
+            color: {tok["accent"]} !important;
+            white-space: nowrap;
           }}
           .flow-note {{
-            margin-top: 0.55rem;
+            margin-top: 0.35rem;
             color: {tok["muted"]} !important;
             font-size: 0.8rem;
-          }}
-          .flow-pass {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.55rem;
-          }}
-          @media (max-width: 800px) {{
-            .flow-pass {{ grid-template-columns: 1fr; }}
           }}
           .flow-pill {{
             display: inline-block;
