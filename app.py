@@ -2275,9 +2275,6 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
 
-    if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = True
-
     with st.sidebar:
         st.markdown('<div class="sidebar-brand">◈ Category Discovery</div>', unsafe_allow_html=True)
         st.markdown(
