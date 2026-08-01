@@ -908,14 +908,6 @@ def inject_styles() -> None:
           .simple-step .pills {{
             margin-top: 0.55rem;
           }}
-          .simple-arrow {{
-            text-align: center;
-            color: {tok["accent"]} !important;
-            font-size: 1.25rem;
-            font-weight: 700;
-            line-height: 1;
-            padding: 0.25rem 0;
-          }}
           .flow-note {{
             margin-top: 0.85rem;
             color: {tok["muted"]} !important;
