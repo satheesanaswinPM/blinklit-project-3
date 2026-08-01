@@ -848,165 +848,169 @@ def inject_styles() -> None:
           .flow-wrap {{
             display: flex;
             flex-direction: column;
-            gap: 0.85rem;
+            gap: 0;
             font-family: "Plus Jakarta Sans", sans-serif;
             font-size: 0.86rem;
             line-height: 1.45;
             color: {tok["ink"]} !important;
           }}
-          .arch-rail {{
-            display: grid;
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 0.45rem;
-            position: relative;
+          .vflow {{
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0;
+            max-width: 820px;
+            margin: 0 auto;
+            width: 100%;
           }}
-          @media (max-width: 980px) {{
-            .arch-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-          }}
-          .arch-step {{
-            position: relative;
+          .vflow-step {{
             border: 1px solid {tok["line"]};
-            border-radius: 14px;
+            border-radius: 16px;
             background: linear-gradient(180deg, {tok["panel"]} 0%, {"rgba(255,255,255,0.02)" if is_dark() else "#F8FAFC"} 100%);
-            padding: 0.85rem 0.75rem 0.9rem;
-            min-height: 132px;
+            padding: 1rem 1.1rem 1.05rem;
             box-shadow: var(--shadow);
+            position: relative;
           }}
-          .arch-step::after {{
-            content: "→";
-            position: absolute;
-            right: -0.42rem;
-            top: 48%;
-            transform: translateY(-50%);
-            color: {tok["accent"]};
-            font-weight: 700;
-            font-size: 0.95rem;
-            z-index: 2;
-            background: {tok["bg"]};
+          .vflow-step.vflow-terminal {{
+            border-color: color-mix(in srgb, {tok["accent"]} 45%, {tok["line"]});
+            background: linear-gradient(180deg, {tok["accent_soft"]} 0%, {tok["panel"]} 70%);
+          }}
+          .vflow-head {{
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+          }}
+          .vflow-num {{
+            flex: 0 0 auto;
+            width: 2rem;
+            height: 2rem;
             border-radius: 999px;
-            width: 1.1rem;
-            height: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1;
-          }}
-          .arch-step:last-child::after {{ content: none; }}
-          @media (max-width: 980px) {{
-            .arch-step:nth-child(2n)::after {{ content: none; }}
-          }}
-          .arch-idx {{
-            display: inline-block;
             font-family: "Sora", sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #fff !important;
+            background: {tok["accent"]};
+            box-shadow: 0 0 0 4px {tok["accent_soft"]};
+          }}
+          .vflow-titles {{
+            min-width: 0;
+            flex: 1;
+          }}
+          .vflow-phase {{
             font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             color: {tok["accent"]} !important;
-            background: {tok["accent_soft"]};
-            border: 1px solid color-mix(in srgb, {tok["accent"]} 28%, transparent);
-            border-radius: 999px;
-            padding: 0.15rem 0.45rem;
-            margin-bottom: 0.45rem;
+            margin-bottom: 0.15rem;
           }}
-          .arch-title {{
+          .vflow-title {{
             font-family: "Sora", sans-serif;
-            font-size: 0.92rem;
+            font-size: 1.02rem;
             font-weight: 700;
             color: {tok["ink"]} !important;
-            margin: 0 0 0.3rem 0;
             line-height: 1.25;
+            margin: 0;
           }}
-          .arch-tech {{
+          .vflow-tech {{
             color: {tok["muted"]} !important;
-            font-size: 0.78rem;
-            line-height: 1.4;
-            margin-bottom: 0.45rem;
+            font-size: 0.82rem;
+            margin-top: 0.2rem;
           }}
-          .arch-meta {{
-            font-size: 0.72rem;
-            font-weight: 650;
-            color: {tok["ink"]} !important;
-            font-variant-numeric: tabular-nums;
-          }}
-          .arch-lane {{
-            border: 1px solid {tok["line"]};
-            border-radius: 16px;
-            background: {tok["panel"]};
-            padding: 1rem 1.05rem 1.05rem;
-            box-shadow: var(--shadow);
-          }}
-          .arch-lane h4 {{
-            margin: 0 0 0.75rem 0 !important;
-            font-family: "Sora", sans-serif !important;
-            font-size: 0.78rem !important;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: {tok["accent"]} !important;
-          }}
-          .arch-nodes {{
+          .vflow-body {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 0.55rem;
+            gap: 0.45rem;
+            margin-left: 2.75rem;
           }}
-          .arch-node {{
+          @media (max-width: 640px) {{
+            .vflow-body {{ margin-left: 0; }}
+          }}
+          .vflow-node {{
             border: 1px solid {tok["line"]};
-            border-radius: 12px;
-            padding: 0.7rem 0.75rem;
-            background: {"rgba(255,255,255,0.03)" if is_dark() else "#F8FAFC"};
+            border-radius: 10px;
+            padding: 0.55rem 0.65rem;
+            background: {"rgba(255,255,255,0.03)" if is_dark() else "#FFFFFF"};
           }}
-          .arch-node .k {{
+          .vflow-node .k {{
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.66rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             color: {tok["muted"]} !important;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.2rem;
           }}
-          .arch-node .v {{
+          .vflow-node .v {{
             display: block;
             color: {tok["ink"]} !important;
-            font-size: 0.86rem;
+            font-size: 0.84rem;
             font-weight: 600;
             line-height: 1.35;
           }}
-          .arch-node .s {{
+          .vflow-node .s {{
             display: block;
-            margin-top: 0.25rem;
+            margin-top: 0.18rem;
             color: {tok["muted"]} !important;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-family: ui-monospace, "Cascadia Code", monospace;
           }}
-          .arch-connector {{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.55rem;
-            color: {tok["muted"]} !important;
+          .vflow-meta {{
+            margin: 0.65rem 0 0 2.75rem;
             font-size: 0.78rem;
             font-weight: 650;
-            letter-spacing: 0.04em;
+            color: {tok["ink"]} !important;
+            font-variant-numeric: tabular-nums;
+          }}
+          @media (max-width: 640px) {{
+            .vflow-meta {{ margin-left: 0; }}
+          }}
+          .vflow-join {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.15rem 0 0.15rem;
+            color: {tok["muted"]} !important;
+          }}
+          .vflow-join .shaft {{
+            width: 2px;
+            height: 18px;
+            background: linear-gradient(180deg, {tok["line"]}, {tok["accent"]});
+          }}
+          .vflow-join .arrow {{
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid {tok["accent"]};
+            margin-top: -1px;
+          }}
+          .vflow-join .label {{
+            margin: 0.2rem 0 0.15rem;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
-            padding: 0.15rem 0;
-          }}
-          .arch-connector span.line {{
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, {tok["line"]}, transparent);
-          }}
-          .arch-connector .chip {{
-            border: 1px solid {tok["line"]};
-            border-radius: 999px;
-            padding: 0.28rem 0.7rem;
-            background: {tok["accent_soft"]};
             color: {tok["accent"]} !important;
-            white-space: nowrap;
+            background: {tok["accent_soft"]};
+            border: 1px solid color-mix(in srgb, {tok["accent"]} 25%, transparent);
+            border-radius: 999px;
+            padding: 0.18rem 0.55rem;
+          }}
+          .vflow-join .shaft-bottom {{
+            width: 2px;
+            height: 14px;
+            background: linear-gradient(180deg, {tok["accent"]}, {tok["line"]});
           }}
           .flow-note {{
-            margin-top: 0.35rem;
+            margin-top: 0.85rem;
             color: {tok["muted"]} !important;
             font-size: 0.8rem;
+            text-align: center;
           }}
           .flow-pill {{
             display: inline-block;
