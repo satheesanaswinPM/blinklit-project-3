@@ -196,8 +196,9 @@ def main() -> int:
         capture_output=True,
         text=True,
     )
-    if push.returncode != 0 and "fetch first" in (push.stderr or "").lower() or (
-        push.returncode != 0 and "rejected" in (push.stderr or "").lower()
+    if push.returncode != 0 and (
+        "fetch first" in (push.stderr or "").lower()
+        or "rejected" in (push.stderr or "").lower()
     ):
         # Integrate remote commits, then retry a normal (non-force) push
         rebase = subprocess.run(
