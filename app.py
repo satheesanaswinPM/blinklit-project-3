@@ -1552,49 +1552,102 @@ def _workflow_counts() -> dict[str, int]:
 
 
 def render_end_to_end_workflow() -> None:
-    """Simple, user-friendly downward flowchart of the research pipeline."""
+    """Plain-language downward flow for non-technical readers (native Streamlit UI)."""
     c = _workflow_counts()
-    sources = (
-        f"Play {c['play_raw']:,} · App Store {c['app_store_raw']:,} · "
-        f"Reddit {c['reddit_raw']:,} · YouTube {c['youtube_raw']:,}"
-    )
 
-    def step(num: str, title: str, detail: str, pills: str = "") -> str:
-        pill_html = f'<div class="pills">{pills}</div>' if pills else ""
-        return f"""
-    <div class="simple-step">
-      <div class="n">{html.escape(num)}</div>
-      <div class="t">{html.escape(title)}</div>
-      <p class="d">{html.escape(detail)}</p>
-      {pill_html}
-    </div>"""
-
-    arrow = '<div class="simple-arrow">↓</div>'
-
-    html_block = f"""
-<div class="flow-wrap">
-  <div class="simple-flow">
-    {step("1", "Collect feedback", "Gather what people say about Blinkit from app stores and online communities.", f'<span class="flow-pill">{html.escape(sources)}</span>')}
-    {arrow}
-    {step("2", "Combine into one dataset", "Merge every source into a single clean review list, without duplicates.", f'<span class="flow-pill">{c["merged"]:,} reviews ready</span>')}
-    {arrow}
-    {step("3", "Find patterns", "Spot recurring themes, sentiment, and shopper groups in the feedback.", f'<span class="flow-pill">{c["themes"]:,} themes</span><span class="flow-pill">{c["sentiment"]:,} sentiment labels</span><span class="flow-pill">{c["segments"]:,} segments</span>')}
-    {arrow}
-    {step("4", "Tag exploration barriers", "Flag reviews that explain why people stick to familiar categories.", f'<span class="flow-pill">{c["exploration_relevant"]:,} relevant of {c["exploration"]:,}</span>')}
-    {arrow}
-    {step("5", "Turn findings into actions", "Summarize barriers, jobs-to-be-done, experiments, and category opportunities.", f'<span class="flow-pill">{c["category_ops"]:,} category opportunities</span>')}
-    {arrow}
-    {step("6", "Explore in the dashboard", "Use Findings, Opportunities, and Validation to review evidence and decide what to test next.", '<span class="flow-pill">Findings Board</span><span class="flow-pill">Category Opportunities</span><span class="flow-pill">Validation Desk</span>')}
-  </div>
-  <div class="flow-note">Refresh data anytime with <code>python main.py --skip-collect</code>, then click Refresh in the sidebar.</div>
-</div>
-"""
+    steps = [
+        {
+            "num": "1",
+            "title": "Listen to customers",
+            "detail": (
+                "We collect what people write about Blinkit — app reviews and online comments — "
+                "so we can hear real experiences, not guesses."
+            ),
+            "stats": (
+                f"App Store: {c['app_store_raw']:,}  ·  "
+                f"Google Play: {c['play_raw']:,}  ·  "
+                f"Reddit: {c['reddit_raw']:,}  ·  "
+                f"YouTube: {c['youtube_raw']:,}"
+            ),
+        },
+        {
+            "num": "2",
+            "title": "Bring it all together",
+            "detail": (
+                "All that feedback is cleaned up and combined into one list, "
+                "so nothing important is missed and duplicates are removed."
+            ),
+            "stats": f"{c['merged']:,} customer comments in one place",
+        },
+        {
+            "num": "3",
+            "title": "Spot what keeps coming up",
+            "detail": (
+                "We look for repeated topics (like late delivery or pricing), "
+                "whether people sound happy or frustrated, and groups of similar shoppers."
+            ),
+            "stats": (
+                f"{c['themes']:,} common topics  ·  "
+                f"{c['sentiment']:,} mood labels  ·  "
+                f"{c['segments']:,} shopper groups"
+            ),
+        },
+        {
+            "num": "4",
+            "title": "Find why people don’t try new categories",
+            "detail": (
+                "We highlight comments that explain habit (“I always reorder the same things”), "
+                "worry about quality or price, or trouble discovering other sections of the app."
+            ),
+            "stats": (
+                f"{c['exploration_relevant']:,} useful comments "
+                f"(out of {c['exploration']:,} checked)"
+            ),
+        },
+        {
+            "num": "5",
+            "title": "Turn that into clear next steps",
+            "detail": (
+                "The tool summarizes the main blockers, what shoppers are trying to get done, "
+                "ideas worth testing, and which product categories look most promising."
+            ),
+            "stats": f"{c['category_ops']:,} category opportunities ready to review",
+        },
+        {
+            "num": "6",
+            "title": "Explore the answers in this app",
+            "detail": (
+                "Use the left menu to read the story (Findings), see category ideas "
+                "(Opportunities), and check the evidence (Validation) before deciding what to try."
+            ),
+            "stats": "Findings Board  →  Category Opportunities  →  Validation Desk",
+        },
+    ]
 
     panel_start(
-        "How the insight engine works",
-        "A simple 6-step path from raw feedback to product decisions.",
+        "How this works (simple view)",
+        "Six everyday steps — from customer comments to product decisions.",
     )
-    st.markdown(html_block, unsafe_allow_html=True)
+
+    for i, s in enumerate(steps):
+        st.markdown(
+            f"""
+<div class="simple-step">
+  <div class="n">{html.escape(s["num"])}</div>
+  <div class="t">{html.escape(s["title"])}</div>
+  <p class="d">{html.escape(s["detail"])}</p>
+  <div class="pills"><span class="flow-pill">{html.escape(s["stats"])}</span></div>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if i < len(steps) - 1:
+            st.markdown(
+                '<div class="simple-arrow" aria-hidden="true">↓ then</div>',
+                unsafe_allow_html=True,
+            )
+
+    st.caption("Tip: after a new analysis finishes, click **Refresh data** in the sidebar to load the latest results.")
     panel_end()
 
 
