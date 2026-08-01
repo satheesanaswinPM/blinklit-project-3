@@ -179,12 +179,11 @@ def main() -> int:
                 print(commit.stdout or commit.stderr, file=sys.stderr)
 
     # Push if ahead of remote or we just committed
-    ahead = _commits_ahead()
-    # Also push when upstream missing
+    ahead = _commits_ahead(branch)
     upstream = _run(["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"])
     need_push = ahead > 0 or upstream.returncode != 0
 
-    if not need_push and not dirty:
+    if not need_push:
         return 0
 
     if _debounced() and ahead <= 0:

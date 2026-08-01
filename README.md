@@ -127,4 +127,8 @@ python -m streamlit run app.py
 # or: streamlit run app.py  (if streamlit is on PATH)
 ```
 
-Left sidebar navigates Overview, Top Themes, Sentiment, User Segments, Product Insights, and Opportunity Ranking. Charts use Plotly; data is read from `output/`.
+Left sidebar navigates Overview, Top Themes, Sentiment, User Segments, Product Insights, Opportunity Ranking, and Methodology. Charts use Plotly; data is read from `output/`.
+
+## Auto-push to GitHub
+
+Cursor project hooks (`.cursor/hooks.json`) run `python .cursor/hooks/auto_push.py` after agent file edits and when the agent stops. The script stages changes (honoring `.gitignore`), commits, and pushes to `origin` on the current branch. Rapid edits are debounced (~45s). Never force-pushes; `.env` stays excluded.
