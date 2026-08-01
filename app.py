@@ -184,8 +184,15 @@ def load_insights() -> dict:
     return payload
 
 
+def _mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime if path.exists() else 0.0
+    except OSError:
+        return 0.0
+
+
 @st.cache_data(show_spinner=False)
-def load_synthesis() -> dict:
+def _load_synthesis_cached(mtime: float) -> dict:
     path = OUTPUT / "synthesis.json"
     if not path.exists():
         return {}
@@ -198,8 +205,46 @@ def load_synthesis() -> dict:
         return {}
 
 
+def load_synthesis() -> dict:
+    """Load synthesis.json; cache key includes mtime so regenerations refresh the UI."""
+    return _load_synthesis_cached(_mtime(OUTPUT / "synthesis.json"))
+
+
+def ensure_synthesis(*, force: bool = False) -> dict:
+    """Return synthesis with category opportunities, generating from tags if needed."""
+    syn = load_synthesis()
+    ops = (syn or {}).get("category_opportunities") or []
+    if syn and ops and not force:
+        return syn
+
+    tags_path = OUTPUT / "exploration_tags.csv"
+    merged_path = DATA_PROC / "merged_reviews.csv"
+    if not tags_path.exists() and merged_path.exists():
+        try:
+            from analysis.exploration import save_tags, tag_corpus
+
+            df = pd.read_csv(merged_path)
+            text_col = "text" if "text" in df.columns else "Review"
+            save_tags(tag_corpus(df, text_col=text_col), tags_path)
+        except Exception as exc:  # noqa: BLE001
+            st.warning(f"Could not build exploration tags: {exc}")
+
+    if not tags_path.exists():
+        return syn or {}
+
+    try:
+        from llm.synthesis import generate_synthesis
+
+        syn = generate_synthesis(tags_path, OUTPUT / "synthesis.json", polish=False)
+        st.cache_data.clear()
+        return syn if isinstance(syn, dict) else load_synthesis()
+    except Exception as exc:  # noqa: BLE001
+        st.warning(f"Could not generate synthesis: {exc}")
+        return syn or {}
+
+
 @st.cache_data(show_spinner=False)
-def load_exploration() -> pd.DataFrame:
+def _load_exploration_cached(mtime: float) -> pd.DataFrame:
     path = OUTPUT / "exploration_tags.csv"
     if not path.exists():
         return pd.DataFrame()
@@ -210,8 +255,12 @@ def load_exploration() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def load_exploration() -> pd.DataFrame:
+    return _load_exploration_cached(_mtime(OUTPUT / "exploration_tags.csv"))
+
+
 @st.cache_data(show_spinner=False)
-def load_merged() -> pd.DataFrame:
+def _load_merged_cached(mtime: float) -> pd.DataFrame:
     path = DATA_PROC / "merged_reviews.csv"
     if not path.exists():
         return pd.DataFrame()
@@ -220,6 +269,10 @@ def load_merged() -> pd.DataFrame:
     except Exception as exc:  # noqa: BLE001
         st.warning(f"Could not read merged_reviews.csv: {exc}")
         return pd.DataFrame()
+
+
+def load_merged() -> pd.DataFrame:
+    return _load_merged_cached(_mtime(DATA_PROC / "merged_reviews.csv"))
 
 
 def _theme_display_name(row: pd.Series) -> str:
