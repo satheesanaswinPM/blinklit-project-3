@@ -1,15 +1,16 @@
 """
 End-to-end Discovery Insight Engine pipeline.
 
-Runs every stage in order:
-  1. Collect Google Play reviews
-  2. Collect Reddit posts
-  3. Clean data
-  4. Generate embeddings
-  5. Detect themes
-  6. Analyze sentiment
-  7. Segment users
-  8. Generate product insights
+Primary question: Why don't Blinkit users explore new categories?
+
+Stages:
+  1–4  Collect Play / App Store / Reddit / YouTube
+  5    Merge multi-source corpus
+  6    Clean data
+  7–10 Embeddings → themes → sentiment → segments
+  11   Exploration tagging
+  12   Product insights (legacy RQ board)
+  13   Synthesis (JTBD, unmet needs, experiments, category ops)
 
 Usage (from repo root):
   python main.py
