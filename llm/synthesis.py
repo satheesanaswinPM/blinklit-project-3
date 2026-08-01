@@ -24,9 +24,13 @@ from typing import Any
 
 import pandas as pd
 
-from env_loader import load_dotenv
-
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from discovery_engine.env_loader import load_env  # noqa: E402
 TAGS_PATH = ROOT / "output" / "exploration_tags.csv"
 THEMES_PATH = ROOT / "output" / "themes.csv"
 SEGMENTS_PATH = ROOT / "output" / "user_segments.csv"
