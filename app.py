@@ -1,8 +1,11 @@
 """
 Discovery Insight Engine — Streamlit dashboard.
 
-Reads analysis outputs from ./output and presents:
-  Overview, Themes, Sentiment, Segments, Insights, Opportunities.
+Primary question: Why don't Blinkit users explore new categories?
+
+IA (parity with reference, not a clone):
+  Findings Board · Category Opportunities · Validation Desk ·
+  Live Pipeline · Try-it Console · Evidence Lab · Methodology · Admin
 
 Run from repo root:
   streamlit run app.py
@@ -12,6 +15,8 @@ from __future__ import annotations
 
 import html
 import json
+import os
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -19,8 +24,16 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from discovery_engine.env_loader import load_env
+
+load_env()
+
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "output"
+DATA_RAW = ROOT / "data" / "raw"
+DATA_PROC = ROOT / "data" / "processed"
+
+PRIMARY_QUESTION = "Why don't Blinkit users explore new categories?"
 
 SENTIMENT_COLORS = {
     "Positive": "#12B76A",
@@ -35,25 +48,34 @@ SEGMENT_COLORS = {
 }
 PRIORITY_ORDER = {"High": 0, "Medium": 1, "Low": 2}
 PRIORITY_COLORS = {"High": "#F04438", "Medium": "#F79009", "Low": "#2E90FA"}
+SIGNAL_COLORS = {
+    "stuck_in_routine": "#F79009",
+    "want_to_explore_blocked": "#F04438",
+    "explored_new": "#12B76A",
+    "unclear": "#98A2B3",
+    "noise": "#D0D5DD",
+}
 
 PAGES = [
-    "Overview",
-    "Top Themes",
-    "Sentiment",
-    "User Segments",
-    "Product Insights",
-    "Opportunity Ranking",
+    "Findings Board",
+    "Category Opportunities",
+    "Validation Desk",
+    "Live Pipeline",
+    "Try-it Console",
+    "Evidence Lab",
     "Methodology",
+    "Admin",
 ]
 
 PAGE_ICONS = {
-    "Overview": "◈",
-    "Top Themes": "▣",
-    "Sentiment": "◐",
-    "User Segments": "◎",
-    "Product Insights": "✦",
-    "Opportunity Ranking": "↑",
+    "Findings Board": "✦",
+    "Category Opportunities": "↑",
+    "Validation Desk": "☑",
+    "Live Pipeline": "⟳",
+    "Try-it Console": "▷",
+    "Evidence Lab": "▣",
     "Methodology": "?",
+    "Admin": "⚙",
 }
 
 PLOTLY_CONFIG = {
