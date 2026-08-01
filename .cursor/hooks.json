@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "python .cursor/hooks/auto_push.py",
+        "timeout": 180
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "python .cursor/hooks/auto_push.py",
+        "timeout": 180
+      }
+    ],
+    "afterTabFileEdit": [
+      {
+        "command": "python .cursor/hooks/auto_push.py",
+        "timeout": 180
+      }
+    ]
+  }
+}

@@ -43,6 +43,7 @@ PAGES = [
     "User Segments",
     "Product Insights",
     "Opportunity Ranking",
+    "Methodology",
 ]
 
 PAGE_ICONS = {
@@ -52,6 +53,7 @@ PAGE_ICONS = {
     "User Segments": "◎",
     "Product Insights": "✦",
     "Opportunity Ranking": "↑",
+    "Methodology": "?",
 }
 
 PLOTLY_CONFIG = {
@@ -215,21 +217,62 @@ def theme_tokens() -> dict[str, str]:
 
 
 def _chart_layout(fig: go.Figure, *, height: int | None = None) -> go.Figure:
+    """Apply readable axis/legend fonts for the active light/dark palette."""
     tok = theme_tokens()
+    ink = tok["ink"]
+    muted = tok["muted"]
     fig.update_layout(
+        template="plotly_white" if not is_dark() else "plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Plus Jakarta Sans, Inter, sans-serif", color=tok["ink"], size=13),
+        font=dict(family="Plus Jakarta Sans, Inter, sans-serif", color=ink, size=13),
+        title_font=dict(color=ink),
+        legend=dict(font=dict(color=ink)),
         margin=dict(t=28, b=28, l=24, r=24),
         hoverlabel=dict(
             bgcolor=tok["panel"],
             bordercolor=tok["line"],
-            font=dict(family="Plus Jakarta Sans, sans-serif", color=tok["ink"], size=12),
+            font=dict(family="Plus Jakarta Sans, sans-serif", color=ink, size=12),
         ),
+        xaxis=dict(
+            color=muted,
+            title_font=dict(color=muted),
+            tickfont=dict(color=ink, size=12),
+            gridcolor=tok["grid"],
+            zerolinecolor=tok["grid"],
+            linecolor=tok["line"],
+        ),
+        yaxis=dict(
+            color=ink,
+            title_font=dict(color=muted),
+            tickfont=dict(color=ink, size=12),
+            gridcolor=tok["grid"],
+            zerolinecolor=tok["grid"],
+            linecolor=tok["line"],
+        ),
+    )
+    # Outside bar labels / pie slice text
+    fig.update_traces(
+        selector=dict(type="bar"),
+        textfont=dict(color=ink, size=12, family="Plus Jakarta Sans, sans-serif"),
+    )
+    fig.update_traces(
+        selector=dict(type="pie"),
+        textfont=dict(color=ink, size=13, family="Plus Jakarta Sans, sans-serif"),
     )
     if height is not None:
         fig.update_layout(height=height)
     return fig
+
+
+def _show_chart(fig: go.Figure) -> None:
+    """Render Plotly without Streamlit theme override (keeps light-mode labels readable)."""
+    st.plotly_chart(
+        fig,
+        use_container_width=True,
+        config=PLOTLY_CONFIG,
+        theme=None,
+    )
 
 
 def sentiment_pie(df: pd.DataFrame) -> go.Figure:
@@ -260,7 +303,14 @@ def sentiment_pie(df: pd.DataFrame) -> go.Figure:
     )
     fig.update_layout(
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=-0.14, x=0.5, xanchor="center"),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.14,
+            x=0.5,
+            xanchor="center",
+            font=dict(color=tok["ink"], size=12),
+        ),
         annotations=[
             dict(
                 text=f"<b>{int(counts.sum())}</b><br><span style='font-size:12px'>reviews</span>",
@@ -271,7 +321,12 @@ def sentiment_pie(df: pd.DataFrame) -> go.Figure:
             )
         ],
     )
-    return _chart_layout(fig, height=400)
+    fig = _chart_layout(fig, height=400)
+    fig.update_traces(
+        textfont=dict(color=tok["ink"], size=13, family="Plus Jakarta Sans, sans-serif"),
+        selector=dict(type="pie"),
+    )
+    return fig
 
 
 def theme_frequency_chart(themes: pd.DataFrame, top_n: int = 10) -> go.Figure:
@@ -290,14 +345,17 @@ def theme_frequency_chart(themes: pd.DataFrame, top_n: int = 10) -> go.Figure:
             hovertemplate="<b>%{y}</b><br>%{x} reviews<extra></extra>",
             text=data["Number of reviews"],
             textposition="outside",
+            textfont=dict(color=tok["ink"], size=12),
             cliponaxis=False,
         )
     )
+    fig = _chart_layout(fig, height=max(340, 40 * len(data) + 90))
     fig.update_layout(
-        xaxis=dict(title="Reviews", gridcolor=tok["grid"], zeroline=False, color=tok["muted"]),
-        yaxis=dict(title="", automargin=True, color=tok["ink"]),
+        xaxis_title="Reviews",
+        yaxis_title="",
+        yaxis_automargin=True,
     )
-    return _chart_layout(fig, height=max(340, 40 * len(data) + 90))
+    return fig
 
 
 def segment_bar(segments: pd.DataFrame) -> go.Figure:
@@ -312,13 +370,16 @@ def segment_bar(segments: pd.DataFrame) -> go.Figure:
         color="Segment",
         color_discrete_map=SEGMENT_COLORS,
     )
-    fig.update_traces(textposition="outside", marker_line_width=0, width=0.55, cliponaxis=False)
-    fig.update_layout(
-        showlegend=False,
-        xaxis=dict(title="", gridcolor=tok["grid"], color=tok["muted"]),
-        yaxis=dict(title="Users", gridcolor=tok["grid"], zeroline=False, color=tok["muted"]),
+    fig.update_traces(
+        textposition="outside",
+        marker_line_width=0,
+        width=0.55,
+        cliponaxis=False,
+        textfont=dict(color=tok["ink"], size=12),
     )
-    return _chart_layout(fig, height=400)
+    fig = _chart_layout(fig, height=400)
+    fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Users")
+    return fig
 
 
 def opportunity_rank_chart(ranked: pd.DataFrame) -> go.Figure:
@@ -341,14 +402,14 @@ def opportunity_rank_chart(ranked: pd.DataFrame) -> go.Figure:
             text=data["Priority"],
             textposition="inside",
             insidetextanchor="middle",
-            textfont=dict(color="white", size=12),
+            textfont=dict(color="#FFFFFF", size=12),
         )
     )
-    fig.update_layout(
-        xaxis=dict(title="Opportunity score", gridcolor=tok["grid"], range=[0, 105], color=tok["muted"]),
-        yaxis=dict(title="", automargin=True, color=tok["ink"]),
-    )
-    return _chart_layout(fig, height=max(380, 56 * len(data) + 90))
+    fig = _chart_layout(fig, height=max(380, 56 * len(data) + 90))
+    # Keep inside labels white on colored bars (overrides _chart_layout bar textfont)
+    fig.update_traces(textfont=dict(color="#FFFFFF", size=12), selector=dict(type="bar"))
+    fig.update_layout(xaxis_title="Opportunity score", xaxis_range=[0, 105], yaxis_automargin=True)
+    return fig
 
 
 def confidence_bar(sentiment: pd.DataFrame) -> go.Figure:
@@ -370,13 +431,20 @@ def confidence_bar(sentiment: pd.DataFrame) -> go.Figure:
         color_discrete_map=SENTIMENT_COLORS,
         text=conf["Confidence Score"].map(lambda x: f"{x:.2f}"),
     )
-    fig.update_traces(textposition="outside", width=0.55, cliponaxis=False)
+    fig.update_traces(
+        textposition="outside",
+        width=0.55,
+        cliponaxis=False,
+        textfont=dict(color=tok["ink"], size=12),
+    )
+    fig = _chart_layout(fig, height=360)
     fig.update_layout(
         showlegend=False,
-        yaxis=dict(range=[0, 1.08], title="Avg confidence", gridcolor=tok["grid"], color=tok["muted"]),
-        xaxis=dict(title="", color=tok["muted"]),
+        xaxis_title="",
+        yaxis_title="Avg confidence",
+        yaxis_range=[0, 1.08],
     )
-    return _chart_layout(fig, height=360)
+    return fig
 
 
 # ---------------------------------------------------------------------------
@@ -851,7 +919,7 @@ def render_overview(sentiment: pd.DataFrame, themes: pd.DataFrame, segments: pd.
     with left:
         panel_start("Sentiment mix", "Share of Positive, Neutral, and Negative reviews.")
         if total:
-            st.plotly_chart(sentiment_pie(sentiment), use_container_width=True, config=PLOTLY_CONFIG)
+            _show_chart(sentiment_pie(sentiment))
         else:
             st.info("Run `python -m analysis.sentiment` to generate sentiment.csv.")
         panel_end()
@@ -859,11 +927,7 @@ def render_overview(sentiment: pd.DataFrame, themes: pd.DataFrame, segments: pd.
     with right:
         panel_start("Theme frequency", "Top themes by number of supporting reviews.")
         if not themes.empty:
-            st.plotly_chart(
-                theme_frequency_chart(themes, top_n=8),
-                use_container_width=True,
-                config=PLOTLY_CONFIG,
-            )
+            _show_chart(theme_frequency_chart(themes, top_n=8))
         else:
             st.info("Run `python -m analysis.themes` to generate themes.csv.")
         panel_end()
@@ -952,11 +1016,7 @@ def render_themes(themes: pd.DataFrame) -> None:
     if filtered.empty:
         st.info("No themes match the current search / filters.")
     else:
-        st.plotly_chart(
-            theme_frequency_chart(filtered, top_n=max(12, len(filtered))),
-            use_container_width=True,
-            config=PLOTLY_CONFIG,
-        )
+        _show_chart(theme_frequency_chart(filtered, top_n=max(12, len(filtered))))
     panel_end()
 
     st.subheader("Theme detail")
@@ -1005,12 +1065,12 @@ def render_sentiment(sentiment: pd.DataFrame) -> None:
     left, right = st.columns([1.1, 1])
     with left:
         panel_start("Sentiment pie chart", "Distribution across Positive / Neutral / Negative.")
-        st.plotly_chart(sentiment_pie(sentiment), use_container_width=True, config=PLOTLY_CONFIG)
+        _show_chart(sentiment_pie(sentiment))
         panel_end()
     with right:
         avg_conf = float(sentiment["Confidence Score"].mean()) if "Confidence Score" in sentiment.columns else 0.0
         panel_start("Confidence", "Mean model confidence by class.")
-        st.plotly_chart(confidence_bar(sentiment), use_container_width=True, config=PLOTLY_CONFIG)
+        _show_chart(confidence_bar(sentiment))
         st.caption(f"Overall mean confidence: {avg_conf:.3f}")
         panel_end()
 
@@ -1065,7 +1125,7 @@ def render_segments(segments: pd.DataFrame) -> None:
     left, right = st.columns([1.1, 1])
     with left:
         panel_start("Segment distribution", "Review count by user segment.")
-        st.plotly_chart(segment_bar(segments), use_container_width=True, config=PLOTLY_CONFIG)
+        _show_chart(segment_bar(segments))
         panel_end()
     with right:
         panel_start("Segment notes", "How each cluster was labeled.")
@@ -1220,7 +1280,7 @@ def render_opportunities(insights_payload: dict) -> None:
     if view.empty:
         st.info("No opportunities match the current search.")
     else:
-        st.plotly_chart(opportunity_rank_chart(view), use_container_width=True, config=PLOTLY_CONFIG)
+        _show_chart(opportunity_rank_chart(view))
     panel_end()
 
     st.subheader("Ranked backlog")
@@ -1239,6 +1299,123 @@ def render_opportunities(insights_payload: dict) -> None:
             """,
             unsafe_allow_html=True,
         )
+
+
+def render_methodology() -> None:
+    """Explain data workflow, theme mining, insight generation, and validation."""
+    page_header(
+        "Methodology",
+        "How Discovery Insight Engine gathers feedback, finds themes, generates product insights, and checks quality.",
+    )
+
+    panel_start(
+        "1. How your workflow gathers and analyzes data",
+        "End-to-end path from raw feedback to dashboard-ready outputs.",
+    )
+    st.markdown(
+        """
+**Collection**
+- **Google Play reviews** are scraped for the Blinkit app (`com.grofers.customerapp`) via `google-play-scraper` and stored as `data/raw/blinkit_play_reviews.csv` (Review, Rating, Date, Helpful Count).
+- **Reddit posts** (optional) are collected with PRAW when `REDDIT_*` credentials exist, then merged into the same clean corpus.
+
+**Cleaning & preparation** (`python main.py`)
+1. Soft-dedupe (casefold + whitespace) so empty and exact duplicates are removed without over-collapsing near-duplicates.
+2. NLP preprocess (normalize text; keep a fallback for short/emoji-only reviews).
+3. Write `data/processed/preprocessed_reviews.csv`.
+
+**Analysis stages (in order)**
+| Stage | Method | Output |
+| --- | --- | --- |
+| Embeddings | TF-IDF (default) or sentence-transformers | `data/processed/review_embeddings.npy` |
+| Themes | BERTopic on embeddings | `output/themes.csv` |
+| Sentiment | Hugging Face `sentiment-analysis` pipeline (3-class) | `output/sentiment.csv` |
+| Segments | KMeans (k=4) + prototype labeling | `output/user_segments.csv` |
+| Insights | LLM grounded on themes/sentiment/segments (heuristic fallback) | `output/insights.json` |
+
+The Streamlit dashboard and Theme Explorer API read these artifacts — they do not re-scrape on every page load.
+        """
+    )
+    panel_end()
+
+    panel_start(
+        "2. How themes are identified",
+        "Unsupervised topic discovery over the review corpus.",
+    )
+    st.markdown(
+        """
+**Approach:** BERTopic clusters review embeddings, then names each cluster from its top keywords.
+
+**Steps**
+1. Encode each cleaned review into a vector (TF-IDF + truncated SVD by default for speed/reliability; optional MiniLM backend).
+2. Fit BERTopic (UMAP → HDBSCAN → c-TF-IDF topic words).
+3. For every topic, export:
+   - **Theme name** — top representative keywords
+   - **Number of reviews** assigned to the topic
+   - **Representative keywords**
+   - **Representative reviews** — short evidence snippets
+
+**Why this design**
+- Scales from hundreds to thousands of reviews without hand-coding categories.
+- Keywords + example reviews keep themes **inspectable** on the Top Themes page.
+- Outlier / mixed reviews are kept as an explicit bucket rather than forced into a weak topic.
+        """
+    )
+    panel_end()
+
+    panel_start(
+        "3. How insights are generated",
+        "Structured answers to seven discovery research questions.",
+    )
+    st.markdown(
+        """
+**Research questions answered**
+1. Why do users repeatedly buy from the same categories?
+2. What prevents users from exploring new categories?
+3. How do users discover products today?
+4. What role do habits play?
+5. What frustrations emerge repeatedly?
+6. Which user segments experiment more?
+7. What unmet needs emerge?
+
+**Generation path** (`llm/insights.py`)
+1. Build a compact **evidence context** from `themes.csv`, `sentiment.csv`, and `user_segments.csv` (theme sizes, keywords, sentiment mix, segment counts).
+2. Call an OpenAI-compatible LLM (Groq-compatible when `OPENAI_API_KEY` is a `gsk_` key) with a JSON schema requiring, for each insight:
+   - Title, Evidence, Business Impact, Opportunity, Priority, Recommendation
+3. If the LLM is unavailable or returns invalid JSON, generate **grounded fallback insights** from the same CSV evidence (no invented quotes).
+
+**Dashboard use**
+- Product Insights shows the full cards.
+- Opportunity Ranking sorts by Priority (High → Medium → Low) for a backlog view.
+        """
+    )
+    panel_end()
+
+    panel_start(
+        "4. How you validated the quality of the insights",
+        "Phase 0 quality gates plus runtime checks that keep insights tied to evidence.",
+    )
+    st.markdown(
+        """
+**Offline / Phase 0 validation** (see `docs/METRICS.md`, `docs/LABELING_GUIDE.md`)
+- **Gold labels** (`data/gold/gold_labels.jsonl`) define barrier/category/spam expectations.
+- **Quote grounding rate** — insights or themes must cite evidence that appears in source text (target ≥ 0.95 on held gold).
+- **Barrier / category F1** — multi-label offline metrics before promoting a model version.
+- **Eval harness** — `python -m scripts.run_eval` / `python -m scripts.validate_gold` for schema and metric checks.
+
+**Runtime / pipeline validation**
+- Insights are generated only after themes exist; sentiment and segments are attached when present.
+- LLM outputs are schema-normalized (required fields, Priority ∈ High/Medium/Low).
+- Invalid or empty LLM responses fall back to heuristic insights built from the same CSVs — so the dashboard never depends on an ungrounded free-form answer.
+- Sentiment uses a calibrated 3-class model with confidence scores; segments require ≥ 4 reviews and publish a **label rationale** per cluster.
+- Soft-dedupe + non-empty review filters reduce spam/empty noise before modeling.
+
+**Human review loop**
+- Theme Explorer / Streamlit tables expose representative reviews so product partners can spot-check themes and insight Evidence fields against real quotes before acting on recommendations.
+        """
+    )
+    panel_end()
+
+    st.caption("Entrypoints: `python main.py` · `python -m streamlit run app.py` · docs in `docs/`.")
 
 
 # ---------------------------------------------------------------------------
@@ -1298,6 +1475,8 @@ def main() -> None:
         render_insights(insights)
     elif page == "Opportunity Ranking":
         render_opportunities(insights)
+    elif page == "Methodology":
+        render_methodology()
 
 
 if __name__ == "__main__":
