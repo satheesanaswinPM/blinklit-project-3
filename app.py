@@ -1889,7 +1889,19 @@ def render_category_opportunities(synthesis: dict) -> None:
     )
     ops = (synthesis or {}).get("category_opportunities") or []
     if not ops:
-        st.info("No category opportunities yet. Generate synthesis first.")
+        with st.spinner("Building category opportunities from exploration tags…"):
+            synthesis = ensure_synthesis(force=True)
+            ops = (synthesis or {}).get("category_opportunities") or []
+    if not ops:
+        st.warning(
+            "Still no category opportunities. Ensure `data/processed/merged_reviews.csv` exists, "
+            "then click **Refresh data** in the sidebar or run `python -m llm.synthesis --no-polish`."
+        )
+        if st.button("Generate synthesis now", type="primary"):
+            with st.spinner("Generating…"):
+                ensure_synthesis(force=True)
+            st.cache_data.clear()
+            st.rerun()
         return
     df = pd.DataFrame(ops)
     c1, c2 = st.columns([1.2, 1])
