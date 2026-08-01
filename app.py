@@ -859,12 +859,24 @@ def inject_styles() -> None:
             align-items: stretch;
             gap: 0;
           }}
+          .simple-arrow {{
+            text-align: center;
+            color: {tok["accent"]} !important;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: lowercase;
+            line-height: 1.2;
+            padding: 0.35rem 0 0.45rem;
+            opacity: 0.9;
+          }}
           .simple-step {{
             border: 1px solid {tok["line"]};
             border-radius: 16px;
             background: {tok["panel"]};
-            padding: 1rem 1.15rem;
+            padding: 1.05rem 1.2rem 1.1rem;
             box-shadow: var(--shadow);
+            margin: 0;
           }}
           .simple-step .n {{
             display: inline-flex;
