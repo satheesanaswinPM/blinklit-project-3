@@ -2229,9 +2229,13 @@ def main() -> None:
     themes = load_themes()
     segments = load_segments()
     insights = load_insights()
-    synthesis = load_synthesis()
     exploration = load_exploration()
     merged = load_merged()
+    # Auto-heal empty/stale synthesis so Category Opportunities never dead-ends
+    if page in {"Findings Board", "Category Opportunities", "Validation Desk"}:
+        synthesis = ensure_synthesis()
+    else:
+        synthesis = load_synthesis()
 
     if page == "Findings Board":
         render_findings_board(synthesis, insights)
