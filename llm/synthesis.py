@@ -305,15 +305,19 @@ def build_synthesis_from_corpus(
     )
 
     segment_note = ""
-    if segments is not None and len(segments) and "segment" in segments.columns:
-        seg_counts = segments["segment"].value_counts().head(4).to_dict()
-        segment_note = f"Behavioral clusters observed: {seg_counts}"
+    if segments is not None and len(segments):
+        seg_col = "Segment" if "Segment" in segments.columns else "segment"
+        if seg_col in segments.columns:
+            seg_counts = segments[seg_col].value_counts().head(4).to_dict()
+            segment_note = f"Behavioral clusters observed: {seg_counts}"
 
     theme_note = ""
-    if themes is not None and len(themes) and "theme" in themes.columns:
-        theme_note = "Top themes: " + ", ".join(
-            str(t) for t in themes["theme"].value_counts().head(5).index.tolist()
-        )
+    if themes is not None and len(themes):
+        theme_col = "Theme name" if "Theme name" in themes.columns else "theme"
+        if theme_col in themes.columns:
+            theme_note = "Top themes: " + ", ".join(
+                str(t) for t in themes[theme_col].head(5).tolist()
+            )
 
     return {
         "primary_question": PRIMARY_QUESTION,
