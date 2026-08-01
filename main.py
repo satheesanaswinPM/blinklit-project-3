@@ -158,13 +158,50 @@ def stage_collect_play(ctx: PipelineContext) -> Path:
     return PLAY_CSV
 
 
+def stage_collect_app_store(ctx: PipelineContext) -> Path | None:
+    """Download App Store RSS reviews, or reuse existing CSV / seed feedback."""
+    if ctx.skip_collect:
+        if APP_STORE_CSV.exists():
+            _warn(f"Skipping App Store scrape; using existing {APP_STORE_CSV}")
+            return APP_STORE_CSV
+        seed = ROOT / "data" / "raw" / "app_store_feedback.csv"
+        if seed.exists():
+            _warn(f"Skipping App Store scrape; seed feedback present at {seed}")
+            return seed
+        _warn("Skipping App Store scrape (--skip-collect and no app_store CSV)")
+        ctx.skipped_stages.append("Collect App Store reviews")
+        return None
+
+    from scripts.download_app_store_reviews import fetch_page, write_csv, BLINKIT_IOS_ID
+
+    print("Fetching Blinkit App Store reviews (RSS)...")
+    rows: list[dict] = []
+    for page in range(1, 11):
+        try:
+            rows.extend(fetch_page(BLINKIT_IOS_ID, "in", page))
+        except Exception as exc:  # noqa: BLE001
+            _warn(f"App Store page {page} failed: {exc}")
+            break
+    if rows:
+        write_csv(rows, APP_STORE_CSV)
+        print(f"Saved {len(rows)} App Store reviews -> {APP_STORE_CSV}")
+        return APP_STORE_CSV
+    _warn("App Store collector returned 0 reviews; seed feedback may still be merged")
+    ctx.skipped_stages.append("Collect App Store reviews")
+    return APP_STORE_CSV if APP_STORE_CSV.exists() else None
+
+
 def stage_collect_reddit(ctx: PipelineContext) -> Path | None:
     """Download Reddit posts when credentials exist; otherwise skip."""
     if ctx.skip_collect:
         if REDDIT_CSV.exists():
             _warn(f"Skipping Reddit scrape; using existing {REDDIT_CSV}")
             return REDDIT_CSV
-        _warn("Skipping Reddit scrape (--skip-collect and no existing reddit_posts.csv)")
+        seed = ROOT / "data" / "raw" / "reddit_feedback.csv"
+        if seed.exists():
+            _warn(f"Skipping Reddit scrape; seed feedback present at {seed}")
+            return seed
+        _warn("Skipping Reddit scrape (--skip-collect and no existing reddit CSV)")
         ctx.skipped_stages.append("Collect Reddit posts")
         return None
 
@@ -200,43 +237,90 @@ def stage_collect_reddit(ctx: PipelineContext) -> Path | None:
     return REDDIT_CSV
 
 
-def stage_clean_data(ctx: PipelineContext) -> Path:
-    """Light-clean Play (and optional Reddit) into a cleaned corpus.
+def stage_collect_youtube(ctx: PipelineContext) -> Path | None:
+    """Download YouTube comments when YOUTUBE_API_KEY is set."""
+    if ctx.skip_collect:
+        if YOUTUBE_CSV.exists():
+            _warn(f"Skipping YouTube scrape; using existing {YOUTUBE_CSV}")
+            return YOUTUBE_CSV
+        _warn("Skipping YouTube scrape (--skip-collect)")
+        ctx.skipped_stages.append("Collect YouTube comments")
+        return None
 
-    Uses soft exact-text dedupe (whitespace + case fold only) so short
-    near-duplicate reviews like "Good" / "good!!" are not over-collapsed.
-    Keeps rows even when NLP preprocess empties emoji-only text by falling
-    back to a light normalized raw string for embeddings.
+    if not os.getenv("YOUTUBE_API_KEY", "").strip():
+        _warn("YOUTUBE_API_KEY missing; skipping YouTube collection")
+        ctx.skipped_stages.append("Collect YouTube comments")
+        return YOUTUBE_CSV if YOUTUBE_CSV.exists() else None
+
+    from scripts.download_youtube_comments import main as yt_main
+
+    code = yt_main()
+    if code != 0:
+        _warn("YouTube collector exited non-zero")
+        ctx.skipped_stages.append("Collect YouTube comments")
+        return YOUTUBE_CSV if YOUTUBE_CSV.exists() else None
+    return YOUTUBE_CSV if YOUTUBE_CSV.exists() else None
+
+
+def stage_merge_corpus(ctx: PipelineContext) -> Path:
+    """Unify Play / App Store / Reddit / YouTube / seed channels."""
+    from discovery_engine.corpus.merge import merge_sources, save_merged
+
+    merged = merge_sources()
+    if merged.empty:
+        raise RuntimeError("Merged corpus is empty — run collectors or add seed feedback CSVs")
+    path = save_merged(merged, MERGED_CSV)
+    print(f"Merged {len(merged)} items -> {path}")
+    print(merged["source"].value_counts().to_string())
+    return path
+
+
+def stage_clean_data(ctx: PipelineContext) -> Path:
+    """Light-clean the multi-source corpus into embedding-ready docs.
+
+    Prefers merged_reviews.csv; falls back to Play (+ Reddit) if merge missing.
+    Soft exact-text dedupe (whitespace + case fold only).
     """
     from discovery_engine.nlp.preprocess import preprocess_text
 
-    if not PLAY_CSV.exists():
-        raise FileNotFoundError(f"Play reviews not found: {PLAY_CSV}")
-
-    play = pd.read_csv(PLAY_CSV)
-    if "Review" not in play.columns:
-        raise ValueError(f"Expected 'Review' column in {PLAY_CSV}; got {list(play.columns)}")
-
     frames: list[pd.DataFrame] = []
-    play_part = play.copy()
-    play_part["source"] = "play_store"
-    play_part["raw_text"] = _series_or_empty(play_part, "Review")
-    frames.append(play_part)
-
-    if REDDIT_CSV.exists():
-        try:
-            reddit = pd.read_csv(REDDIT_CSV)
-        except Exception as exc:  # noqa: BLE001
-            _warn(f"Could not read Reddit CSV ({exc}); continuing with Play only")
-            reddit = None
-        if reddit is not None and len(reddit):
-            title = _series_or_empty(reddit, "Title")
-            body = _series_or_empty(reddit, "Body")
-            comments = _series_or_empty(reddit, "Comments")
-            combined = (title + " " + body + " " + comments).str.strip()
-            reddit_part = pd.DataFrame({"Review": combined, "source": "reddit", "raw_text": combined})
-            frames.append(reddit_part)
-            print(f"Merged {len(reddit_part)} Reddit rows into clean corpus")
+    if MERGED_CSV.exists():
+        merged = pd.read_csv(MERGED_CSV)
+        part = pd.DataFrame(
+            {
+                "Review": _series_or_empty(merged, "text"),
+                "source": _series_or_empty(merged, "source"),
+                "raw_text": _series_or_empty(merged, "text"),
+            }
+        )
+        frames.append(part)
+        print(f"Cleaning from merged corpus ({len(part)} rows)")
+    else:
+        if not PLAY_CSV.exists():
+            raise FileNotFoundError(f"Play reviews not found: {PLAY_CSV}")
+        play = pd.read_csv(PLAY_CSV)
+        if "Review" not in play.columns:
+            raise ValueError(f"Expected 'Review' column in {PLAY_CSV}; got {list(play.columns)}")
+        play_part = play.copy()
+        play_part["source"] = "play_store"
+        play_part["raw_text"] = _series_or_empty(play_part, "Review")
+        frames.append(play_part)
+        if REDDIT_CSV.exists():
+            try:
+                reddit = pd.read_csv(REDDIT_CSV)
+            except Exception as exc:  # noqa: BLE001
+                _warn(f"Could not read Reddit CSV ({exc}); continuing with Play only")
+                reddit = None
+            if reddit is not None and len(reddit):
+                title = _series_or_empty(reddit, "Title")
+                body = _series_or_empty(reddit, "Body")
+                comments = _series_or_empty(reddit, "Comments")
+                combined = (title + " " + body + " " + comments).str.strip()
+                reddit_part = pd.DataFrame(
+                    {"Review": combined, "source": "reddit", "raw_text": combined}
+                )
+                frames.append(reddit_part)
+                print(f"Merged {len(reddit_part)} Reddit rows into clean corpus")
 
     df = pd.concat(frames, ignore_index=True, sort=False)
     texts = df["raw_text"].fillna("").astype(str).tolist()
