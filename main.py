@@ -546,14 +546,46 @@ def stage_generate_insights(ctx: PipelineContext) -> Path:
     return INSIGHTS_JSON
 
 
+def stage_exploration_tags(ctx: PipelineContext) -> Path:
+    """Tag merged corpus for category-exploration relevance and barriers."""
+    from analysis.exploration import save_tags, tag_corpus
+
+    src = MERGED_CSV if MERGED_CSV.exists() else CLEANED_CSV
+    if not src.exists():
+        raise FileNotFoundError(f"No corpus for exploration tagging: {src}")
+    df = pd.read_csv(src)
+    text_col = "text" if "text" in df.columns else ("Review" if "Review" in df.columns else None)
+    if text_col is None:
+        raise ValueError(f"No text column in {src}")
+    tagged = tag_corpus(df, text_col=text_col)
+    save_tags(tagged, EXPLORATION_CSV)
+    print(tagged["exploration_signal"].value_counts().to_string())
+    print(f"Relevant: {int(tagged['is_relevant'].sum())} / {len(tagged)} -> {EXPLORATION_CSV}")
+    return EXPLORATION_CSV
+
+
+def stage_generate_synthesis(ctx: PipelineContext) -> Path:
+    """JTBD + unmet needs + experiments + category opportunities → synthesis.json."""
+    from llm.synthesis import generate_synthesis
+
+    if not EXPLORATION_CSV.exists():
+        raise FileNotFoundError(f"Exploration tags required: {EXPLORATION_CSV}")
+    syn = generate_synthesis(EXPLORATION_CSV, SYNTHESIS_JSON, polish=True)
+    print(f"Executive summary ({len(syn.get('executive_summary', ''))} chars)")
+    print(f"Barriers: {len(syn.get('barriers_ranked', []))} | Categories: {len(syn.get('category_opportunities', []))}")
+    print(f"Wrote synthesis -> {SYNTHESIS_JSON}")
+    return SYNTHESIS_JSON
+
+
 # ---------------------------------------------------------------------------
 # Orchestrator
 # ---------------------------------------------------------------------------
 
 
 def run_pipeline(ctx: PipelineContext) -> int:
-    """Run all eight stages and print a summary. Returns process exit code."""
-    print("Discovery Insight Engine - full pipeline")
+    """Run all stages and print a summary. Returns process exit code."""
+    print("Discovery Insight Engine - category exploration pipeline")
+    print("Primary question: Why don't Blinkit users explore new categories?")
     print(f"Root: {ROOT}")
     print(f"Embedding backend: {ctx.embedding_backend}")
     if ctx.skip_collect:
@@ -571,13 +603,37 @@ def run_pipeline(ctx: PipelineContext) -> int:
         ctx,
         stage_no=2,
         total=TOTAL_STAGES,
+        title="Collect App Store reviews",
+        fn=lambda: stage_collect_app_store(ctx),
+        critical=False,
+    )
+    run_stage(
+        ctx,
+        stage_no=3,
+        total=TOTAL_STAGES,
         title="Collect Reddit posts",
         fn=lambda: stage_collect_reddit(ctx),
         critical=False,
     )
     run_stage(
         ctx,
-        stage_no=3,
+        stage_no=4,
+        total=TOTAL_STAGES,
+        title="Collect YouTube comments",
+        fn=lambda: stage_collect_youtube(ctx),
+        critical=False,
+    )
+    run_stage(
+        ctx,
+        stage_no=5,
+        total=TOTAL_STAGES,
+        title="Merge multi-source corpus",
+        fn=lambda: stage_merge_corpus(ctx),
+        critical=True,
+    )
+    run_stage(
+        ctx,
+        stage_no=6,
         total=TOTAL_STAGES,
         title="Clean data",
         fn=lambda: stage_clean_data(ctx),
@@ -585,7 +641,7 @@ def run_pipeline(ctx: PipelineContext) -> int:
     )
     run_stage(
         ctx,
-        stage_no=4,
+        stage_no=7,
         total=TOTAL_STAGES,
         title="Generate embeddings",
         fn=lambda: stage_generate_embeddings(ctx),
@@ -593,7 +649,7 @@ def run_pipeline(ctx: PipelineContext) -> int:
     )
     run_stage(
         ctx,
-        stage_no=5,
+        stage_no=8,
         total=TOTAL_STAGES,
         title="Detect themes",
         fn=lambda: stage_detect_themes(ctx),
@@ -601,7 +657,7 @@ def run_pipeline(ctx: PipelineContext) -> int:
     )
     run_stage(
         ctx,
-        stage_no=6,
+        stage_no=9,
         total=TOTAL_STAGES,
         title="Analyze sentiment",
         fn=lambda: stage_analyze_sentiment(ctx),
@@ -609,7 +665,7 @@ def run_pipeline(ctx: PipelineContext) -> int:
     )
     run_stage(
         ctx,
-        stage_no=7,
+        stage_no=10,
         total=TOTAL_STAGES,
         title="Segment users",
         fn=lambda: stage_segment_users(ctx),
@@ -617,10 +673,26 @@ def run_pipeline(ctx: PipelineContext) -> int:
     )
     run_stage(
         ctx,
-        stage_no=8,
+        stage_no=11,
+        total=TOTAL_STAGES,
+        title="Exploration tagging",
+        fn=lambda: stage_exploration_tags(ctx),
+        critical=True,
+    )
+    run_stage(
+        ctx,
+        stage_no=12,
         total=TOTAL_STAGES,
         title="Generate product insights",
         fn=lambda: stage_generate_insights(ctx),
+        critical=False,
+    )
+    run_stage(
+        ctx,
+        stage_no=13,
+        total=TOTAL_STAGES,
+        title="Synthesis (JTBD / experiments / category ops)",
+        fn=lambda: stage_generate_synthesis(ctx),
         critical=True,
     )
 
@@ -639,16 +711,19 @@ def run_pipeline(ctx: PipelineContext) -> int:
         return 1
 
     print("All stages completed successfully.")
+    print(f"  Merged     -> {MERGED_CSV}")
     print(f"  Themes     -> {THEMES_CSV}")
     print(f"  Sentiment  -> {SENTIMENT_CSV}")
     print(f"  Segments   -> {SEGMENTS_CSV}")
+    print(f"  Exploration-> {EXPLORATION_CSV}")
     print(f"  Insights   -> {INSIGHTS_JSON}")
+    print(f"  Synthesis  -> {SYNTHESIS_JSON}")
     return 0
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run the full discovery insight pipeline (collect → insights)."
+        description="Run the category-exploration discovery pipeline (collect → synthesis)."
     )
     parser.add_argument("--play-count", type=int, default=200, help="Google Play reviews to fetch")
     parser.add_argument("--reddit-limit", type=int, default=25, help="Reddit posts per subreddit")
