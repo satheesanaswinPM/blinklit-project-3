@@ -28,7 +28,9 @@ def load_env() -> Path | None:
 
     # Normalize whitespace around values commonly pasted with "KEY= value"
     for key in list(os.environ.keys()):
-        if key.startswith(("HF_", "HUGGING_", "OPENAI_", "REDDIT_", "PHASE1_")):
+        if key.startswith(
+            ("HF_", "HUGGING_", "OPENAI_", "REDDIT_", "PHASE1_", "GROQ_", "YOUTUBE_", "ADMIN_")
+        ):
             os.environ[key] = os.environ[key].strip()
 
     hf = os.getenv("HF_TOKEN", "").strip()
