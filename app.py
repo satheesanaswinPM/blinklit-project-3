@@ -924,6 +924,76 @@ def inject_styles() -> None:
             font-size: 0.75rem;
             font-weight: 700;
           }}
+          .ai-arch {{
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            max-width: 780px;
+            margin: 0.25rem auto 0;
+          }}
+          .ai-arch-stage {{
+            border: 1px solid {tok["line"]};
+            border-radius: 14px;
+            background: linear-gradient(180deg, {"#121821"} 0%, {"#0E141C"} 100%);
+            padding: 0.95rem 1.05rem;
+            box-shadow: var(--shadow);
+          }}
+          .ai-arch-stage .lane {{
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: {tok["accent"]} !important;
+            margin-bottom: 0.35rem;
+          }}
+          .ai-arch-stage .title {{
+            font-family: "Sora", sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: {tok["ink"]} !important;
+            margin: 0 0 0.35rem 0;
+          }}
+          .ai-arch-stage .desc {{
+            color: {tok["muted"]} !important;
+            font-size: 0.86rem;
+            line-height: 1.45;
+            margin: 0 0 0.55rem 0;
+          }}
+          .ai-arch-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.4rem;
+          }}
+          .ai-arch-chip {{
+            border: 1px solid {tok["line"]};
+            border-radius: 10px;
+            padding: 0.45rem 0.55rem;
+            background: rgba(255,255,255,0.03);
+          }}
+          .ai-arch-chip .k {{
+            display: block;
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: {tok["muted"]} !important;
+          }}
+          .ai-arch-chip .v {{
+            display: block;
+            margin-top: 0.15rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: {tok["ink"]} !important;
+            line-height: 1.3;
+          }}
+          .ai-arch-join {{
+            text-align: center;
+            color: {tok["accent"]} !important;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            padding: 0.35rem 0;
+          }}
           div[data-testid="stDataFrame"] {{
             border: 1px solid var(--line);
             border-radius: 14px;
