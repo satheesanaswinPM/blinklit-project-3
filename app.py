@@ -1740,13 +1740,371 @@ The Streamlit dashboard and Theme Explorer API read these artifacts — they do 
 
 
 # ---------------------------------------------------------------------------
+# New IA pages (primary question oriented)
+# ---------------------------------------------------------------------------
+
+
+def render_findings_board(synthesis: dict, insights: dict) -> None:
+    page_header(
+        "Findings Board",
+        "Synthesis for category exploration — barriers, JTBD, unmet needs, and testable experiments.",
+    )
+    if not synthesis:
+        st.info("Run `python main.py --skip-collect` (or full collect) to generate `output/synthesis.json`.")
+        if insights.get("insights"):
+            st.markdown("#### Legacy insight cards still available")
+            render_insights(insights)
+        return
+
+    corpus = synthesis.get("corpus") or {}
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        metric_card("Corpus", f"{corpus.get('total_reviews', 0):,}", "multi-source items")
+    with c2:
+        metric_card(
+            "Exploration-relevant",
+            f"{corpus.get('exploration_relevant', 0):,}",
+            f"rate {corpus.get('relevance_rate', 0):.0%}",
+        )
+    with c3:
+        metric_card("Barriers ranked", str(len(synthesis.get("barriers_ranked") or [])), "friction taxonomy")
+    with c4:
+        metric_card(
+            "Experiments",
+            str(len(synthesis.get("testable_experiments") or [])),
+            "ready to instrument",
+        )
+
+    panel_start("Executive summary", "Grounded in exploration-tagged corpus counts")
+    st.markdown(synthesis.get("executive_summary") or "_No summary yet._")
+    panel_end()
+
+    barriers = synthesis.get("barriers_ranked") or []
+    if barriers:
+        panel_start("Barriers ranked", "Why users avoid new categories")
+        bdf = pd.DataFrame(barriers)
+        fig = go.Figure(
+            go.Bar(
+                x=bdf["mentions"],
+                y=[str(b).replace("_", " ") for b in bdf["barrier"]],
+                orientation="h",
+                marker_color="#039855",
+                text=bdf["mentions"],
+                textposition="outside",
+            )
+        )
+        fig.update_layout(yaxis=dict(autorange="reversed"), margin=dict(l=10, r=10, t=10, b=10))
+        _show_chart(_chart_layout(fig, height=max(280, 40 * len(bdf))))
+        panel_end()
+
+    col_a, col_b = st.columns(2)
+    with col_a:
+        panel_start("Jobs to be done", "Situations → outcomes for exploration")
+        for job in synthesis.get("jobs_to_be_done") or []:
+            st.markdown(f"**{job.get('job', '')}**")
+            st.caption(
+                f"Situation: {job.get('situation', '')} · Outcome: {job.get('desired_outcome', '')}"
+            )
+            st.markdown(f"_Workaround today:_ {job.get('current_workaround', '')}")
+            st.markdown("---")
+        panel_end()
+    with col_b:
+        panel_start("Unmet needs", "Prioritized gaps the product must close")
+        for need in synthesis.get("unmet_needs") or []:
+            st.markdown(f"**[{need.get('priority', 'P1')}] {need.get('need', '')}**")
+            st.caption(need.get("pain", ""))
+            st.markdown(f"<span style='opacity:.7'>Evidence: {html.escape(str(need.get('evidence', '')))}</span>", unsafe_allow_html=True)
+            st.markdown("---")
+        panel_end()
+
+    panel_start("Hypotheses", "Falsifiable statements tied to barriers")
+    for h in synthesis.get("hypotheses") or []:
+        st.markdown(f"**{h.get('id')}** — {h.get('statement')}")
+        st.caption(
+            f"Barrier: {str(h.get('linked_barrier', '')).replace('_', ' ')} · "
+            f"mentions={h.get('evidence_mentions', 0)} · status={h.get('status', 'open')}"
+        )
+    panel_end()
+
+    panel_start("Testable experiments", "Interventions with primary metric + guardrail")
+    for exp in synthesis.get("testable_experiments") or []:
+        with st.expander(f"{exp.get('id')} · {exp.get('name')}", expanded=False):
+            st.markdown(f"**Intervention:** {exp.get('intervention')}")
+            st.markdown(f"**Primary metric:** {exp.get('primary_metric')}")
+            st.markdown(f"**Guardrail:** {exp.get('guardrail')}")
+            st.caption(
+                f"Barrier: {str(exp.get('barrier', '')).replace('_', ' ')} · "
+                f"Hypothesis: {exp.get('hypothesis_link')} · {exp.get('sample_size_note')}"
+            )
+    panel_end()
+
+
+def render_category_opportunities(synthesis: dict) -> None:
+    page_header(
+        "Category Opportunities",
+        "Where blocked exploration intent concentrates — ranked for product bets.",
+    )
+    ops = (synthesis or {}).get("category_opportunities") or []
+    if not ops:
+        st.info("No category opportunities yet. Generate synthesis first.")
+        return
+    df = pd.DataFrame(ops)
+    c1, c2 = st.columns([1.2, 1])
+    with c1:
+        panel_start("Opportunity score by category")
+        fig = go.Figure(
+            go.Bar(
+                x=df["opportunity_score"],
+                y=df["category"],
+                orientation="h",
+                marker_color="#2E90FA",
+                text=df["opportunity_score"],
+                textposition="outside",
+            )
+        )
+        fig.update_layout(yaxis=dict(autorange="reversed"))
+        _show_chart(_chart_layout(fig, height=360))
+        panel_end()
+    with c2:
+        panel_start("Why these categories")
+        for row in ops:
+            st.markdown(
+                f"**#{row.get('rank')} {row.get('category')}** · score {row.get('opportunity_score')}"
+            )
+            st.caption(
+                f"{row.get('why_now')} · attack `{str(row.get('primary_barrier_to_attack', '')).replace('_', ' ')}` "
+                f"via `{row.get('suggested_experiment')}`"
+            )
+            st.markdown("---")
+        panel_end()
+    download_csv_button(df, "category_opportunities.csv", "Download category opportunities")
+
+
+def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synthesis: dict) -> None:
+    page_header(
+        "Validation Desk",
+        "Check relevance filters, signal mix, and sample evidence before trusting synthesis.",
+    )
+    if exploration.empty:
+        st.warning("Missing `output/exploration_tags.csv`. Run exploration tagging via `main.py`.")
+        return
+
+    corpus = (synthesis or {}).get("corpus") or {}
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        metric_card("Tagged rows", f"{len(exploration):,}", "exploration_tags.csv")
+    with c2:
+        rel = int(exploration["is_relevant"].sum()) if "is_relevant" in exploration.columns else 0
+        metric_card("Relevant", f"{rel:,}", f"{rel / max(len(exploration), 1):.0%} of corpus")
+    with c3:
+        sources = corpus.get("by_source") or (
+            exploration["source"].value_counts().to_dict() if "source" in exploration.columns else {}
+        )
+        metric_card("Sources", str(len(sources)), ", ".join(list(sources.keys())[:4]) or "—")
+
+    if "exploration_signal" in exploration.columns:
+        panel_start("Exploration signal mix")
+        counts = exploration["exploration_signal"].value_counts()
+        fig = go.Figure(
+            go.Pie(
+                labels=[str(x).replace("_", " ") for x in counts.index],
+                values=counts.values,
+                hole=0.55,
+                marker=dict(colors=[SIGNAL_COLORS.get(str(k), "#98A2B3") for k in counts.index]),
+            )
+        )
+        _show_chart(_chart_layout(fig, height=360))
+        panel_end()
+
+    if not merged.empty and "source" in merged.columns:
+        panel_start("Multi-source corpus coverage")
+        src = merged["source"].value_counts().reset_index()
+        src.columns = ["source", "count"]
+        fig = px.bar(src, x="source", y="count", color="source")
+        fig.update_layout(showlegend=False)
+        _show_chart(_chart_layout(fig, height=320))
+        panel_end()
+
+    panel_start("Sample tagged evidence", "Spot-check relevance and barriers")
+    view = exploration.copy()
+    if "is_relevant" in view.columns:
+        only_rel = st.checkbox("Relevant only", value=True)
+        if only_rel:
+            view = view[view["is_relevant"] == True]  # noqa: E712
+    signal_opts = sorted(view["exploration_signal"].dropna().unique().tolist()) if "exploration_signal" in view.columns else []
+    pick = st.multiselect("Signals", signal_opts, default=signal_opts[:3] if signal_opts else [])
+    if pick and "exploration_signal" in view.columns:
+        view = view[view["exploration_signal"].isin(pick)]
+    text_col = "text" if "text" in view.columns else ("Review" if "Review" in view.columns else None)
+    cols = [c for c in [text_col, "source", "exploration_signal", "barriers", "categories_mentioned", "relevance_reason"] if c and c in view.columns]
+    st.dataframe(view[cols].head(80) if cols else view.head(80), use_container_width=True, hide_index=True)
+    download_csv_button(view.head(500), "validation_sample.csv", "Download sample")
+    panel_end()
+
+
+def _file_meta(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {"status": "missing", "mtime": "—", "size": "—"}
+    st_info = path.stat()
+    mtime = datetime.fromtimestamp(st_info.st_mtime).strftime("%Y-%m-%d %H:%M")
+    size = f"{st_info.st_size / 1024:.1f} KB"
+    return {"status": "ready", "mtime": mtime, "size": size}
+
+
+def render_live_pipeline() -> None:
+    page_header(
+        "Live Pipeline",
+        "Artifact freshness across collect → merge → tag → synthesis. Re-run from the terminal.",
+    )
+    stages = [
+        ("Play Store raw", DATA_RAW / "blinkit_play_reviews.csv"),
+        ("App Store raw", DATA_RAW / "app_store_reviews.csv"),
+        ("Reddit raw", DATA_RAW / "reddit_posts.csv"),
+        ("YouTube raw", DATA_RAW / "youtube_comments.csv"),
+        ("Merged corpus", DATA_PROC / "merged_reviews.csv"),
+        ("Cleaned corpus", DATA_PROC / "preprocessed_reviews.csv"),
+        ("Themes", OUTPUT / "themes.csv"),
+        ("Sentiment", OUTPUT / "sentiment.csv"),
+        ("Segments", OUTPUT / "user_segments.csv"),
+        ("Exploration tags", OUTPUT / "exploration_tags.csv"),
+        ("Insights JSON", OUTPUT / "insights.json"),
+        ("Synthesis JSON", OUTPUT / "synthesis.json"),
+    ]
+    rows = []
+    for name, path in stages:
+        meta = _file_meta(path)
+        rows.append({"Stage": name, "Path": str(path.relative_to(ROOT)), **meta})
+    df = pd.DataFrame(rows)
+    ready = int((df["status"] == "ready").sum())
+    c1, c2 = st.columns(2)
+    with c1:
+        metric_card("Artifacts ready", f"{ready}/{len(df)}", "files on disk")
+    with c2:
+        metric_card("Primary question", "Category exploration", PRIMARY_QUESTION[:48] + "…")
+
+    panel_start("Stage board")
+    st.dataframe(df, use_container_width=True, hide_index=True)
+    panel_end()
+
+    st.markdown(
+        """
+```bash
+# Full refresh (network collectors)
+python main.py --play-count 500
+
+# Offline reuse of existing raw CSVs
+python main.py --skip-collect
+
+# Tag + synthesize only (after merge exists)
+python -m analysis.exploration
+python -m llm.synthesis --no-polish
+```
+        """
+    )
+
+
+def render_try_it_console() -> None:
+    page_header(
+        "Try-it Console",
+        "Paste a review and see exploration signal, barriers, and category cues instantly.",
+    )
+    from analysis.exploration import tag_review
+
+    samples = [
+        "I always reorder the same milk and bread. Never browse other categories after work.",
+        "Wanted to try electronics but prices look marked up and I don't trust quality for phones.",
+        "Bought pet food for the first time on Blinkit — delivery was fine but hard to find in search.",
+        "Great app!",
+    ]
+    pick = st.selectbox("Load sample", ["(blank)"] + samples)
+    default = "" if pick == "(blank)" else pick
+    text = st.text_area("Review text", value=default, height=140)
+    if st.button("Tag review", type="primary"):
+        result = tag_review(text)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            metric_card("Relevant", "yes" if result["is_relevant"] else "no", result["relevance_reason"][:80])
+        with c2:
+            metric_card("Signal", str(result["exploration_signal"]).replace("_", " "), "")
+        with c3:
+            metric_card("Barriers", str(result["barriers"] or "—").replace("|", ", ").replace("_", " "), result.get("categories_mentioned") or "no categories")
+        st.json(result)
+
+
+def render_evidence_lab(
+    sentiment: pd.DataFrame,
+    themes: pd.DataFrame,
+    segments: pd.DataFrame,
+    insights: dict,
+) -> None:
+    page_header(
+        "Evidence Lab",
+        "Drill into themes, sentiment, segments, and legacy insight cards that feed the synthesis.",
+    )
+    tab1, tab2, tab3, tab4 = st.tabs(["Themes", "Sentiment", "Segments", "Legacy insights"])
+    with tab1:
+        render_themes(themes)
+    with tab2:
+        render_sentiment(sentiment)
+    with tab3:
+        render_segments(segments)
+    with tab4:
+        render_insights(insights)
+        if insights.get("insights"):
+            st.markdown("#### Opportunity ranking (legacy)")
+            render_opportunities(insights)
+
+
+def render_admin() -> None:
+    page_header("Admin", "Protected controls for cache flush and environment visibility.")
+    expected = os.getenv("ADMIN_DASHBOARD_PASSWORD", "blinkit-research").strip()
+    if "admin_ok" not in st.session_state:
+        st.session_state.admin_ok = False
+    if not st.session_state.admin_ok:
+        pwd = st.text_input("Admin password", type="password")
+        if st.button("Unlock"):
+            if pwd == expected:
+                st.session_state.admin_ok = True
+                st.rerun()
+            else:
+                st.error("Incorrect password")
+        st.caption("Set `ADMIN_DASHBOARD_PASSWORD` in `.env` (default for local demos: blinkit-research).")
+        return
+
+    st.success("Admin unlocked for this session.")
+    if st.button("Clear Streamlit cache"):
+        st.cache_data.clear()
+        st.success("Cache cleared")
+    if st.button("Lock admin"):
+        st.session_state.admin_ok = False
+        st.rerun()
+
+    panel_start("Environment (non-secret)")
+    keys = [
+        "PHASE1_EMBEDDING",
+        "OPENAI_MODEL",
+        "GROQ_MODEL",
+        "YOUTUBE_API_KEY",
+        "REDDIT_CLIENT_ID",
+        "GROQ_API_KEY",
+        "OPENAI_API_KEY",
+    ]
+    rows = []
+    for k in keys:
+        val = os.getenv(k, "")
+        rows.append({"key": k, "set": "yes" if val.strip() else "no"})
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    panel_end()
+
+
+# ---------------------------------------------------------------------------
 # App
 # ---------------------------------------------------------------------------
 
 
 def main() -> None:
     st.set_page_config(
-        page_title="Discovery Insight Engine",
+        page_title="Category Discovery Engine",
         page_icon="◈",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -1756,12 +2114,12 @@ def main() -> None:
         st.session_state.dark_mode = False
 
     with st.sidebar:
-        st.markdown('<div class="sidebar-brand">◈ Discovery</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-brand">◈ Category Discovery</div>', unsafe_allow_html=True)
         st.markdown(
-            '<div class="sidebar-meta">Blinkit category-discovery analytics</div>',
+            '<div class="sidebar-meta">Why don’t users explore new categories?</div>',
             unsafe_allow_html=True,
         )
-        st.markdown('<div class="nav-hint">Navigation</div>', unsafe_allow_html=True)
+        st.markdown('<div class="nav-hint">Workspace</div>', unsafe_allow_html=True)
         page_labels = [f"{PAGE_ICONS[p]}  {p}" for p in PAGES]
         choice = st.radio("Navigate", page_labels, label_visibility="collapsed", key="nav_page")
         page = choice.split("  ", 1)[-1].strip()
@@ -1771,33 +2129,37 @@ def main() -> None:
         st.toggle("Dark mode", key="dark_mode")
 
         st.markdown("---")
-        st.caption("Data · `output/`")
+        st.caption("Data · `output/` + `data/processed/`")
         if st.button("Refresh data", use_container_width=True):
             st.cache_data.clear()
             st.rerun()
 
-    # Apply theme CSS after sidebar widgets update session state
     inject_styles()
 
     sentiment = load_sentiment()
     themes = load_themes()
     segments = load_segments()
     insights = load_insights()
+    synthesis = load_synthesis()
+    exploration = load_exploration()
+    merged = load_merged()
 
-    if page == "Overview":
-        render_overview(sentiment, themes, segments, insights)
-    elif page == "Top Themes":
-        render_themes(themes)
-    elif page == "Sentiment":
-        render_sentiment(sentiment)
-    elif page == "User Segments":
-        render_segments(segments)
-    elif page == "Product Insights":
-        render_insights(insights)
-    elif page == "Opportunity Ranking":
-        render_opportunities(insights)
+    if page == "Findings Board":
+        render_findings_board(synthesis, insights)
+    elif page == "Category Opportunities":
+        render_category_opportunities(synthesis)
+    elif page == "Validation Desk":
+        render_validation_desk(exploration, merged, synthesis)
+    elif page == "Live Pipeline":
+        render_live_pipeline()
+    elif page == "Try-it Console":
+        render_try_it_console()
+    elif page == "Evidence Lab":
+        render_evidence_lab(sentiment, themes, segments, insights)
     elif page == "Methodology":
         render_methodology()
+    elif page == "Admin":
+        render_admin()
 
 
 if __name__ == "__main__":
