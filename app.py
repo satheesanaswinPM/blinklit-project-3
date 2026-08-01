@@ -2276,7 +2276,7 @@ def main() -> None:
     )
 
     if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = False
+        st.session_state.dark_mode = True
 
     with st.sidebar:
         st.markdown('<div class="sidebar-brand">◈ Category Discovery</div>', unsafe_allow_html=True)
@@ -2288,10 +2288,6 @@ def main() -> None:
         page_labels = [f"{PAGE_ICONS[p]}  {p}" for p in PAGES]
         choice = st.radio("Navigate", page_labels, label_visibility="collapsed", key="nav_page")
         page = choice.split("  ", 1)[-1].strip()
-
-        st.markdown("---")
-        st.markdown('<div class="nav-hint">Appearance</div>', unsafe_allow_html=True)
-        st.toggle("Dark mode", key="dark_mode")
 
         st.markdown("---")
         st.caption("Data · `output/` + `data/processed/`")
