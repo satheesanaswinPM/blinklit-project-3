@@ -1651,105 +1651,122 @@ def _workflow_counts() -> dict[str, int]:
 
 
 def render_end_to_end_workflow() -> None:
-    """Layered end-to-end workflow diagram (collect → analyze → dashboard)."""
+    """Professional pipeline architecture diagram with live artifact counts."""
     c = _workflow_counts()
     panel_start(
-        "End-to-end workflow",
-        "Primary question: why don’t users explore new categories — collect → tag → synthesize → dashboard.",
+        "Pipeline architecture",
+        "Research question → multi-source ingestion → corpus engineering → representation learning → exploration labeling → product synthesis → decision surfaces.",
     )
     st.markdown(
         f"""
 <div class="flow-wrap">
-  <div class="flow-layer">
-    <h4>Layer 1 · Multi-source collectors  (scripts/)</h4>
-    <div class="flow-grid">
-      <div class="flow-card">
-        <strong>Google Play</strong>
-        <span>→ <code>blinkit_play_reviews.csv</code></span>
-        <div><span class="flow-pill">{c["play_raw"]:,} reviews</span></div>
-      </div>
-      <div class="flow-card">
-        <strong>App Store</strong>
-        <span>RSS → <code>app_store_reviews.csv</code></span>
-        <div><span class="flow-pill">{c["app_store_raw"]:,} reviews</span></div>
-      </div>
-      <div class="flow-card">
-        <strong>Reddit (optional)</strong>
-        <span>PRAW → <code>reddit_posts.csv</code></span>
-        <div><span class="flow-pill">{c["reddit_raw"]:,} posts</span></div>
-      </div>
-      <div class="flow-card">
-        <strong>YouTube (optional)</strong>
-        <span>Data API → <code>youtube_comments.csv</code></span>
-        <div><span class="flow-pill">{c["youtube_raw"]:,} comments</span>
-        <span class="flow-pill">needs YOUTUBE_API_KEY</span></div>
-      </div>
+  <div class="arch-rail">
+    <div class="arch-step">
+      <div class="arch-idx">01 · Ingest</div>
+      <div class="arch-title">Multi-source collection</div>
+      <div class="arch-tech">Play scraper · App Store RSS · Reddit PRAW · YouTube Data API v3</div>
+      <div class="arch-meta">{c["play_raw"] + c["app_store_raw"] + c["reddit_raw"] + c["youtube_raw"]:,} raw records</div>
     </div>
-    <div class="flow-note">Also merges seed channels (social / forum / NPS / product review) when present under <code>data/raw/</code></div>
-  </div>
-
-  <div class="flow-arrow">▼ merge  ·  main.py stage 5 → <code>merged_reviews.csv</code> ({c["merged"]:,})</div>
-
-  <div class="flow-layer">
-    <h4>Normalize · soft-dedupe · preprocess</h4>
-    <div class="flow-grid">
-      <div class="flow-card">
-        <strong>Merged corpus</strong>
-        <span><code>data/processed/merged_reviews.csv</code></span>
-        <div><span class="flow-pill">{c["merged"]:,} items</span></div>
-      </div>
-      <div class="flow-card">
-        <strong>Cleaned for NLP</strong>
-        <span><code>preprocessed_reviews.csv</code> + embeddings</span>
-        <div><span class="flow-pill">{c["cleaned"]:,} items</span></div>
-      </div>
+    <div class="arch-step">
+      <div class="arch-idx">02 · Unify</div>
+      <div class="arch-title">Corpus engineering</div>
+      <div class="arch-tech">Schema normalize · soft-dedupe · preprocess</div>
+      <div class="arch-meta">{c["merged"]:,} merged · {c["cleaned"]:,} cleaned</div>
+    </div>
+    <div class="arch-step">
+      <div class="arch-idx">03 · Embed</div>
+      <div class="arch-title">Representation learning</div>
+      <div class="arch-tech">TF-IDF / Sentence-Transformers → dense vectors</div>
+      <div class="arch-meta">review_embeddings.npy</div>
+    </div>
+    <div class="arch-step">
+      <div class="arch-idx">04 · Model</div>
+      <div class="arch-title">Unsupervised analysis</div>
+      <div class="arch-tech">BERTopic · RoBERTa sentiment · KMeans k=4</div>
+      <div class="arch-meta">{c["themes"]:,} themes · {c["sentiment"]:,} labeled</div>
+    </div>
+    <div class="arch-step">
+      <div class="arch-idx">05 · Label</div>
+      <div class="arch-title">Exploration tagging</div>
+      <div class="arch-tech">Barrier taxonomy · signal classification · relevance filter</div>
+      <div class="arch-meta">{c["exploration_relevant"]:,} relevant / {c["exploration"]:,}</div>
+    </div>
+    <div class="arch-step">
+      <div class="arch-idx">06 · Synthesize</div>
+      <div class="arch-title">Research synthesis</div>
+      <div class="arch-tech">JTBD · unmet needs · hypotheses · experiments · category ops</div>
+      <div class="arch-meta">{c["category_ops"]:,} category opportunities</div>
     </div>
   </div>
 
-  <div class="flow-arrow">▼</div>
+  <div class="arch-connector"><span class="line"></span><span class="chip">Orchestrator · main.py · 13 stages</span><span class="line"></span></div>
 
-  <div class="flow-layer">
-    <h4>Layer 2 · Analysis + exploration synthesis</h4>
-    <div class="flow-pass">
-      <div class="flow-card">
-        <strong>Themes / Sentiment / Segments</strong>
-        <span>BERTopic · HF sentiment · KMeans</span>
-        <div><span class="flow-pill">{c["themes"]:,} themes</span>
-        <span class="flow-pill">{c["sentiment"]:,} sentiment</span>
-        <span class="flow-pill">{c["segments"]:,} segments</span></div>
+  <div class="arch-lane">
+    <h4>Stage detail · technical control flow</h4>
+    <div class="arch-nodes">
+      <div class="arch-node">
+        <span class="k">Research framing</span>
+        <span class="v">Primary question</span>
+        <span class="s">Why don’t users explore new categories?</span>
       </div>
-      <div class="flow-card">
-        <strong>Exploration tagging</strong>
-        <span><code>analysis/exploration.py</code></span>
-        <div><span class="flow-pill">{c["exploration_relevant"]:,} relevant / {c["exploration"]:,}</span></div>
+      <div class="arch-node">
+        <span class="k">Ingestion adapters</span>
+        <span class="v">Play {c["play_raw"]:,} · iOS {c["app_store_raw"]:,}</span>
+        <span class="s">reddit {c["reddit_raw"]:,} · youtube {c["youtube_raw"]:,}</span>
       </div>
-      <div class="flow-card">
-        <strong>Synthesis</strong>
-        <span>JTBD · unmet needs · experiments · category ops</span>
-        <div><span class="flow-pill">{c["category_ops"]:,} category opportunities</span>
-        <span class="flow-pill">output/synthesis.json</span></div>
+      <div class="arch-node">
+        <span class="k">Unified corpus</span>
+        <span class="v">merged_reviews.csv</span>
+        <span class="s">id · source · date · rating · text</span>
       </div>
-      <div class="flow-card">
-        <strong>Legacy insights</strong>
-        <span><code>llm/insights.py</code> RQ board</span>
-        <div><span class="flow-pill">{c["insights"]:,} cards</span></div>
+      <div class="arch-node">
+        <span class="k">NLP feature store</span>
+        <span class="v">preprocessed + embeddings</span>
+        <span class="s">PHASE1_EMBEDDING=tfidf|st</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Theme discovery</span>
+        <span class="v">BERTopic clustering</span>
+        <span class="s">output/themes.csv · {c["themes"]:,} topics</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Affect scoring</span>
+        <span class="v">3-class sentiment</span>
+        <span class="s">twitter-roberta · {c["sentiment"]:,} rows</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Behavioral segments</span>
+        <span class="v">KMeans prototypes</span>
+        <span class="s">Routine · Explorers · Price · Impulse</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Exploration filter</span>
+        <span class="v">Heuristic multi-label tagger</span>
+        <span class="s">stuck · blocked · explored · noise</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Synthesis engine</span>
+        <span class="v">Corpus-grounded templates + LLM polish</span>
+        <span class="s">output/synthesis.json</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Decision surfaces</span>
+        <span class="v">Streamlit research IA</span>
+        <span class="s">Findings · Opportunities · Validation · Live</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Quality gates</span>
+        <span class="v">Gold labels · schema checks</span>
+        <span class="s">{c["gold"]:,} gold rows · eval harness</span>
+      </div>
+      <div class="arch-node">
+        <span class="k">Runtime contract</span>
+        <span class="v">Read-only dashboard I/O</span>
+        <span class="s">No live scrape on page load</span>
       </div>
     </div>
-  </div>
-
-  <div class="flow-arrow">▼</div>
-
-  <div class="flow-layer">
-    <h4>Layer 3 · Dashboard IA  (app.py)</h4>
-    <div class="flow-grid">
-      <div class="flow-card"><strong>Findings Board</strong><span>Exec summary · barriers · JTBD · experiments</span></div>
-      <div class="flow-card"><strong>Category Opportunities</strong><span>Ranked expansion bets</span></div>
-      <div class="flow-card"><strong>Validation · Live · Try-it · Admin</strong><span>Parity IA, local naming</span></div>
-      <div class="flow-card"><strong>Evidence Lab · Methodology</strong><span>Themes/sentiment drill-down + this page</span></div>
-    </div>
-    <div class="flow-note">
-      Live tabs read pre-computed files — no scrape on page load.
-      Refresh: <code>python main.py --skip-collect</code> then reload.
+    <div class="flow-note" style="margin-top:0.85rem">
+      Refresh artifacts: <code>python main.py --skip-collect</code> · Tag only: <code>python -m analysis.exploration</code> · Synthesize: <code>python -m llm.synthesis --no-polish</code>
     </div>
   </div>
 </div>
@@ -1763,7 +1780,7 @@ def render_methodology() -> None:
     """Explain data workflow, theme mining, insight generation, and validation."""
     page_header(
         "Methodology",
-        "How we answer why users don’t explore new categories — multi-source corpus → tags → synthesis.",
+        "Technical pipeline from multi-source feedback to exploration synthesis and decision surfaces.",
     )
 
     render_end_to_end_workflow()
