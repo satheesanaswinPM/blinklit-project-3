@@ -1600,7 +1600,7 @@ def render_methodology() -> None:
     """Explain data workflow, theme mining, insight generation, and validation."""
     page_header(
         "Methodology",
-        "Technical pipeline from multi-source feedback to exploration synthesis and decision surfaces.",
+        "A plain-language look at how feedback becomes exploration insights.",
     )
 
     render_end_to_end_workflow()
