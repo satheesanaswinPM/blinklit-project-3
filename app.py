@@ -1867,6 +1867,95 @@ def render_category_opportunities(synthesis: dict) -> None:
     download_csv_button(df, "category_opportunities.csv", "Download category opportunities")
 
 
+def build_hypothesis_triangulation(
+    exploration: pd.DataFrame,
+    synthesis: dict,
+) -> pd.DataFrame:
+    """Per-hypothesis evidence counts + cross-source triangulation from tagged corpus."""
+    hyps = (synthesis or {}).get("hypotheses") or []
+    if not hyps:
+        return pd.DataFrame()
+
+    df = exploration.copy()
+    if df.empty:
+        return pd.DataFrame()
+
+    text_col = "text" if "text" in df.columns else ("Review" if "Review" in df.columns else None)
+    has_source = "source" in df.columns
+    has_barriers = "barriers" in df.columns
+
+    rows = []
+    for h in hyps:
+        barrier = str(h.get("linked_barrier") or "").strip()
+        hid = str(h.get("id") or "")
+        statement = str(h.get("statement") or "")
+
+        if has_barriers and barrier:
+            mask = df["barriers"].fillna("").astype(str).str.contains(
+                rf"(?:^|\|){re.escape(barrier)}(?:\||$)",
+                regex=True,
+                na=False,
+            )
+            matched = df.loc[mask]
+        else:
+            matched = df.iloc[0:0]
+
+        n = int(len(matched))
+        source_counts: dict[str, int] = {}
+        if has_source and n:
+            source_counts = {
+                str(k): int(v) for k, v in matched["source"].fillna("unknown").value_counts().items()
+            }
+        n_sources = len(source_counts)
+
+        if n >= 50 and n_sources >= 3:
+            strength = "Strong"
+        elif n >= 15 and n_sources >= 2:
+            strength = "Moderate"
+        elif n >= 5:
+            strength = "Emerging"
+        else:
+            strength = "Weak"
+
+        quote = ""
+        if n and text_col:
+            # Prefer a relevant blocked/stuck example when available
+            prefer = matched
+            if "exploration_signal" in matched.columns:
+                prefer = matched[
+                    matched["exploration_signal"].isin(
+                        ["want_to_explore_blocked", "stuck_in_routine", "explored_new"]
+                    )
+                ]
+                if prefer.empty:
+                    prefer = matched
+            sample = str(prefer.iloc[0][text_col] or "").strip().replace("\n", " ")
+            quote = sample[:160] + ("…" if len(sample) > 160 else "")
+
+        breakdown = ", ".join(f"{k}:{v}" for k, v in sorted(source_counts.items(), key=lambda x: -x[1]))
+        rows.append(
+            {
+                "Hypothesis": hid,
+                "Statement": statement,
+                "Linked barrier": barrier.replace("_", " "),
+                "Evidence mentions": n,
+                "Sources with evidence": n_sources,
+                "Source breakdown": breakdown or "—",
+                "Triangulation": strength,
+                "Example quote": quote or "—",
+                "Status": str(h.get("status") or "open"),
+            }
+        )
+
+    out = pd.DataFrame(rows)
+    if out.empty:
+        return out
+    return out.sort_values(
+        by=["Evidence mentions", "Sources with evidence"],
+        ascending=[False, False],
+    ).reset_index(drop=True)
+
+
 def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synthesis: dict) -> None:
     page_header(
         "Validation Desk",
@@ -1888,6 +1977,43 @@ def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synt
             exploration["source"].value_counts().to_dict() if "source" in exploration.columns else {}
         )
         metric_card("Sources", str(len(sources)), ", ".join(list(sources.keys())[:4]) or "—")
+
+    # Per-hypothesis evidence & triangulation
+    hyp_table = build_hypothesis_triangulation(exploration, synthesis or {})
+    panel_start(
+        "Per-hypothesis evidence & triangulation",
+        "Mentions of each linked barrier, spread across sources, with an example quote.",
+    )
+    if hyp_table.empty:
+        st.info("No hypotheses in synthesis yet. Generate synthesis to populate this table.")
+    else:
+        strong = int((hyp_table["Triangulation"] == "Strong").sum())
+        moderate = int((hyp_table["Triangulation"] == "Moderate").sum())
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            metric_card("Hypotheses", str(len(hyp_table)), "from synthesis.json")
+        with m2:
+            metric_card("Strong triangulation", str(strong), "≥50 mentions · ≥3 sources")
+        with m3:
+            metric_card("Moderate triangulation", str(moderate), "≥15 mentions · ≥2 sources")
+
+        st.dataframe(
+            hyp_table,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Statement": st.column_config.TextColumn("Statement", width="large"),
+                "Example quote": st.column_config.TextColumn("Example quote", width="large"),
+                "Evidence mentions": st.column_config.NumberColumn(format="%d"),
+                "Sources with evidence": st.column_config.NumberColumn(format="%d"),
+            },
+        )
+        download_csv_button(
+            hyp_table,
+            "hypothesis_evidence_triangulation.csv",
+            "Download hypothesis evidence table",
+        )
+    panel_end()
 
     if "exploration_signal" in exploration.columns:
         panel_start("Exploration signal mix")
@@ -1918,12 +2044,27 @@ def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synt
         only_rel = st.checkbox("Relevant only", value=True)
         if only_rel:
             view = view[view["is_relevant"] == True]  # noqa: E712
-    signal_opts = sorted(view["exploration_signal"].dropna().unique().tolist()) if "exploration_signal" in view.columns else []
+    signal_opts = (
+        sorted(view["exploration_signal"].dropna().unique().tolist())
+        if "exploration_signal" in view.columns
+        else []
+    )
     pick = st.multiselect("Signals", signal_opts, default=signal_opts[:3] if signal_opts else [])
     if pick and "exploration_signal" in view.columns:
         view = view[view["exploration_signal"].isin(pick)]
     text_col = "text" if "text" in view.columns else ("Review" if "Review" in view.columns else None)
-    cols = [c for c in [text_col, "source", "exploration_signal", "barriers", "categories_mentioned", "relevance_reason"] if c and c in view.columns]
+    cols = [
+        c
+        for c in [
+            text_col,
+            "source",
+            "exploration_signal",
+            "barriers",
+            "categories_mentioned",
+            "relevance_reason",
+        ]
+        if c and c in view.columns
+    ]
     st.dataframe(view[cols].head(80) if cols else view.head(80), use_container_width=True, hide_index=True)
     download_csv_button(view.head(500), "validation_sample.csv", "Download sample")
     panel_end()
