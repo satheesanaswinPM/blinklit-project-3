@@ -44,17 +44,22 @@ load_env()
 # ---------------------------------------------------------------------------
 
 PLAY_CSV = ROOT / "data" / "raw" / "blinkit_play_reviews.csv"
+APP_STORE_CSV = ROOT / "data" / "raw" / "app_store_reviews.csv"
 REDDIT_CSV = ROOT / "data" / "raw" / "reddit_posts.csv"
+YOUTUBE_CSV = ROOT / "data" / "raw" / "youtube_comments.csv"
+MERGED_CSV = ROOT / "data" / "processed" / "merged_reviews.csv"
 CLEANED_CSV = ROOT / "data" / "processed" / "preprocessed_reviews.csv"
 EMBEDDINGS_NPY = ROOT / "data" / "processed" / "review_embeddings.npy"
 THEMES_CSV = ROOT / "output" / "themes.csv"
 SENTIMENT_CSV = ROOT / "output" / "sentiment.csv"
 SEGMENTS_CSV = ROOT / "output" / "user_segments.csv"
+EXPLORATION_CSV = ROOT / "output" / "exploration_tags.csv"
 INSIGHTS_JSON = ROOT / "output" / "insights.json"
+SYNTHESIS_JSON = ROOT / "output" / "synthesis.json"
 
 EMBEDDING_BACKEND = os.getenv("PHASE1_EMBEDDING", "tfidf").strip() or "tfidf"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-TOTAL_STAGES = 8
+TOTAL_STAGES = 13
 
 
 @dataclass
