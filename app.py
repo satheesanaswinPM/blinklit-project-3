@@ -290,7 +290,8 @@ def _theme_display_name(row: pd.Series) -> str:
 
 
 def is_dark() -> bool:
-    return bool(st.session_state.get("dark_mode", False))
+    """Permanent dark theme."""
+    return True
 
 
 def theme_tokens() -> dict[str, str]:
