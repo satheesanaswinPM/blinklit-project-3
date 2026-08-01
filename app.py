@@ -732,6 +732,84 @@ def inject_styles() -> None:
           }}
           .field-body {{ color: {tok["ink"]} !important; font-size: 0.94rem; line-height: 1.5; }}
 
+          .flow-wrap {{
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            font-family: "Plus Jakarta Sans", ui-monospace, monospace;
+            font-size: 0.84rem;
+            line-height: 1.45;
+            color: {tok["ink"]} !important;
+          }}
+          .flow-layer {{
+            border: 1px solid {tok["line"]};
+            border-radius: 14px;
+            background: {tok["panel"]};
+            padding: 0.95rem 1.05rem 1rem;
+            box-shadow: var(--shadow);
+          }}
+          .flow-layer h4 {{
+            margin: 0 0 0.65rem 0 !important;
+            font-family: "Sora", sans-serif !important;
+            font-size: 0.92rem !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: {tok["accent"]} !important;
+          }}
+          .flow-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.55rem;
+          }}
+          .flow-card {{
+            border: 1px dashed {tok["line"]};
+            border-radius: 10px;
+            padding: 0.55rem 0.65rem;
+            background: {"rgba(255,255,255,0.03)" if is_dark() else "#F8FAFC"};
+          }}
+          .flow-card strong {{
+            display: block;
+            font-size: 0.78rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: {tok["muted"]} !important;
+            margin-bottom: 0.2rem;
+          }}
+          .flow-card span, .flow-card code {{
+            color: {tok["ink"]} !important;
+            font-size: 0.86rem;
+          }}
+          .flow-arrow {{
+            text-align: center;
+            color: {tok["muted"]} !important;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+          }}
+          .flow-note {{
+            margin-top: 0.55rem;
+            color: {tok["muted"]} !important;
+            font-size: 0.8rem;
+          }}
+          .flow-pass {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.55rem;
+          }}
+          @media (max-width: 800px) {{
+            .flow-pass {{ grid-template-columns: 1fr; }}
+          }}
+          .flow-pill {{
+            display: inline-block;
+            margin: 0.15rem 0.25rem 0.15rem 0;
+            padding: 0.12rem 0.45rem;
+            border-radius: 999px;
+            background: {tok["accent_soft"]};
+            color: {tok["accent"]} !important;
+            font-size: 0.72rem;
+            font-weight: 700;
+          }}
+
           div[data-testid="stDataFrame"] {{
             border: 1px solid var(--line);
             border-radius: 14px;
