@@ -1556,26 +1556,22 @@ def _workflow_counts() -> dict[str, int]:
 
 
 def render_end_to_end_workflow() -> None:
-    """Plain-language downward flow for non-technical readers (native Streamlit UI)."""
+    """Plain-language downward flow for non-technical readers."""
     c = _workflow_counts()
 
     steps = [
         {
-            "num": "1",
             "title": "Listen to customers",
             "detail": (
                 "We collect what people write about Blinkit — app reviews and online comments — "
                 "so we can hear real experiences, not guesses."
             ),
             "stats": (
-                f"App Store: {c['app_store_raw']:,}  ·  "
-                f"Google Play: {c['play_raw']:,}  ·  "
-                f"Reddit: {c['reddit_raw']:,}  ·  "
-                f"YouTube: {c['youtube_raw']:,}"
+                f"App Store {c['app_store_raw']:,}  ·  Google Play {c['play_raw']:,}  ·  "
+                f"Reddit {c['reddit_raw']:,}  ·  YouTube {c['youtube_raw']:,}"
             ),
         },
         {
-            "num": "2",
             "title": "Bring it all together",
             "detail": (
                 "All that feedback is cleaned up and combined into one list, "
@@ -1584,7 +1580,6 @@ def render_end_to_end_workflow() -> None:
             "stats": f"{c['merged']:,} customer comments in one place",
         },
         {
-            "num": "3",
             "title": "Spot what keeps coming up",
             "detail": (
                 "We look for repeated topics (like late delivery or pricing), "
@@ -1597,61 +1592,51 @@ def render_end_to_end_workflow() -> None:
             ),
         },
         {
-            "num": "4",
             "title": "Find why people don’t try new categories",
             "detail": (
                 "We highlight comments that explain habit (“I always reorder the same things”), "
-                "worry about quality or price, or trouble discovering other sections of the app."
+                "worry about quality or price, or trouble finding other sections of the app."
             ),
             "stats": (
                 f"{c['exploration_relevant']:,} useful comments "
-                f"(out of {c['exploration']:,} checked)"
+                f"out of {c['exploration']:,} checked"
             ),
         },
         {
-            "num": "5",
             "title": "Turn that into clear next steps",
             "detail": (
-                "The tool summarizes the main blockers, what shoppers are trying to get done, "
+                "Then we summarize the main blockers, what shoppers are trying to get done, "
                 "ideas worth testing, and which product categories look most promising."
             ),
             "stats": f"{c['category_ops']:,} category opportunities ready to review",
         },
         {
-            "num": "6",
             "title": "Explore the answers in this app",
             "detail": (
                 "Use the left menu to read the story (Findings), see category ideas "
                 "(Opportunities), and check the evidence (Validation) before deciding what to try."
             ),
-            "stats": "Findings Board  →  Category Opportunities  →  Validation Desk",
+            "stats": "Findings → Opportunities → Validation",
         },
     ]
 
     panel_start(
-        "How this works (simple view)",
+        "How this works",
         "Six everyday steps — from customer comments to product decisions.",
     )
 
     for i, s in enumerate(steps):
-        st.markdown(
-            f"""
-<div class="simple-step">
-  <div class="n">{html.escape(s["num"])}</div>
-  <div class="t">{html.escape(s["title"])}</div>
-  <p class="d">{html.escape(s["detail"])}</p>
-  <div class="pills"><span class="flow-pill">{html.escape(s["stats"])}</span></div>
-</div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"### {i + 1}. {s['title']}")
+        st.write(s["detail"])
+        st.caption(s["stats"])
         if i < len(steps) - 1:
             st.markdown(
-                '<div class="simple-arrow" aria-hidden="true">↓ then</div>',
+                "<div style='text-align:center;color:#32D583;font-weight:700;"
+                "letter-spacing:0.06em;padding:0.15rem 0 0.35rem;'>↓ then</div>",
                 unsafe_allow_html=True,
             )
 
-    st.caption("Tip: after a new analysis finishes, click **Refresh data** in the sidebar to load the latest results.")
+    st.info("After a new analysis finishes, click **Refresh data** in the sidebar to see the latest numbers.")
     panel_end()
 
 
