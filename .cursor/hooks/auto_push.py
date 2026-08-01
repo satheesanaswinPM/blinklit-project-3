@@ -196,6 +196,30 @@ def main() -> int:
         capture_output=True,
         text=True,
     )
+    if push.returncode != 0 and "fetch first" in (push.stderr or "").lower() or (
+        push.returncode != 0 and "rejected" in (push.stderr or "").lower()
+    ):
+        # Integrate remote commits, then retry a normal (non-force) push
+        rebase = subprocess.run(
+            ["git", "pull", "--rebase", REMOTE, branch],
+            cwd=_repo_root(),
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        if rebase.returncode != 0:
+            print("auto_push: pull --rebase failed", file=sys.stderr)
+            print(rebase.stderr or rebase.stdout, file=sys.stderr)
+            subprocess.run(["git", "rebase", "--abort"], cwd=_repo_root(), capture_output=True)
+            return 0
+        push = subprocess.run(
+            ["git", "push", "-u", REMOTE, branch],
+            cwd=_repo_root(),
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+
     if push.returncode != 0:
         print("auto_push: push failed", file=sys.stderr)
         print(push.stderr or push.stdout, file=sys.stderr)
@@ -203,7 +227,6 @@ def main() -> int:
 
     _touch_stamp()
     print(f"auto_push: pushed to {REMOTE}/{branch}")
-    # stop / afterFileEdit hooks typically need no special JSON
     return 0
 
 
