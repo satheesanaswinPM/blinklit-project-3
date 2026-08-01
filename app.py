@@ -926,7 +926,7 @@ def inject_styles() -> None:
 def page_header(title: str, subtitle: str) -> None:
     st.markdown(
         f"""
-        <div class="hero-kicker">Discovery Insight Engine</div>
+        <div class="hero-kicker">{html.escape(PRIMARY_QUESTION)}</div>
         <div class="hero-title">{html.escape(title)}</div>
         <div class="hero-sub">{html.escape(subtitle)}</div>
         """,
