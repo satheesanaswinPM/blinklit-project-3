@@ -6,7 +6,7 @@ start = t.find("def render_end_to_end_workflow")
 end = t.find("\ndef render_methodology")
 assert start > 0 and end > start, (start, end)
 
-new = '''def render_end_to_end_workflow() -> None:
+new = r'''def render_end_to_end_workflow() -> None:
     """Layered ASCII flowchart (main steps only) with live artifact counts."""
     c = _workflow_counts()
     play = f"{c['play_raw']:,}"
@@ -78,7 +78,7 @@ new = '''def render_end_to_end_workflow() -> None:
 │                                       ▼                           ▼                │
 │                            output/* + data/processed/      main.py (offline run)   │
 └──────────────────────────────────────────────────────────────────────────────────┘
-""".strip("\\n")
+""".strip("\n")
 
     panel_start(
         "Pipeline architecture",
@@ -92,9 +92,6 @@ new = '''def render_end_to_end_workflow() -> None:
 
 
 '''
-
-# Fix accidental double-escape in strip
-new = new.replace('.strip("\\\\n")', '.strip("\\n")')
 
 p.write_text(t[:start] + new + t[end + 1 :], encoding="utf-8")
 print("ok", len(new))
