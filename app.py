@@ -2043,16 +2043,50 @@ def render_evidence_lab(
     )
     tab1, tab2, tab3, tab4 = st.tabs(["Themes", "Sentiment", "Segments", "Legacy insights"])
     with tab1:
-        render_themes(themes)
+        if themes.empty:
+            st.info("No themes.csv yet.")
+        else:
+            _show_chart(theme_frequency_chart(themes))
+            st.dataframe(
+                themes[["Display name", "Number of reviews", "Representative keywords"]].head(25)
+                if "Display name" in themes.columns
+                else themes.head(25),
+                use_container_width=True,
+                hide_index=True,
+            )
     with tab2:
-        render_sentiment(sentiment)
+        if sentiment.empty:
+            st.info("No sentiment.csv yet.")
+        else:
+            c1, c2 = st.columns([1, 1.2])
+            with c1:
+                _show_chart(sentiment_pie(sentiment))
+            with c2:
+                st.dataframe(sentiment.head(40), use_container_width=True, hide_index=True)
     with tab3:
-        render_segments(segments)
+        if segments.empty:
+            st.info("No user_segments.csv yet.")
+        else:
+            counts = segments["Segment"].value_counts() if "Segment" in segments.columns else None
+            if counts is not None:
+                fig = go.Figure(
+                    go.Bar(
+                        x=counts.index.tolist(),
+                        y=counts.values.tolist(),
+                        marker_color=[SEGMENT_COLORS.get(str(x), "#2E90FA") for x in counts.index],
+                    )
+                )
+                _show_chart(_chart_layout(fig, height=320))
+            st.dataframe(segments.head(40), use_container_width=True, hide_index=True)
     with tab4:
-        render_insights(insights)
-        if insights.get("insights"):
-            st.markdown("#### Opportunity ranking (legacy)")
-            render_opportunities(insights)
+        cards = insights.get("insights") or []
+        if not cards:
+            st.info("No insights.json cards yet.")
+        else:
+            for item in cards[:12]:
+                st.markdown(f"**[{item.get('Priority', '')}] {item.get('Title', 'Untitled')}**")
+                st.caption(str(item.get("Opportunity") or item.get("Insight") or "")[:240])
+                st.markdown("---")
 
 
 def render_admin() -> None:
