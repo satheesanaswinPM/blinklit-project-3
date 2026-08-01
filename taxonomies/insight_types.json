@@ -1,0 +1,121 @@
+{
+  "version": "0.1.0",
+  "description": "Maps the six research questions from the problem statement to insight types the engine must produce.",
+  "research_questions": [
+    {
+      "id": "rq1_same_categories",
+      "question": "Why do users repeatedly purchase from the same categories?",
+      "insight_type": "habit_drivers",
+      "name": "Habit drivers",
+      "description": "Recurring reasons users stay in a narrow category set (mental model, reorder convenience, risk aversion).",
+      "primary_barriers": ["habit_mental_model", "cognitive_load", "brand_lock_in", "trust_quality"],
+      "example_outputs": ["Users treat the app as emergency snacks only", "Reorder lists reinforce staples lock-in"]
+    },
+    {
+      "id": "rq2_blockers",
+      "question": "What barriers prevent users from trying new products or categories?",
+      "insight_type": "barrier_taxonomy",
+      "name": "Barrier taxonomy insights",
+      "description": "Ranked, evidenced distribution of barriers blocking cross-category purchase.",
+      "primary_barriers": [
+        "trust_quality",
+        "price_value",
+        "freshness_spoilage",
+        "discovery_invisibility",
+        "search_vocab_gap",
+        "assortment_doubt",
+        "past_bad_experience",
+        "info_trust_gap"
+      ],
+      "example_outputs": ["Freshness fear dominates dairy/meat", "Search vocab gap blocks organic discovery"]
+    },
+    {
+      "id": "rq3_discovery_paths",
+      "question": "How do users currently discover products?",
+      "insight_type": "discovery_path_map",
+      "name": "Discovery path map",
+      "description": "How users find products today: search, homepage, categories, recommendations, social, reorder.",
+      "primary_barriers": ["discovery_invisibility", "search_vocab_gap"],
+      "discovery_paths": [
+        "search",
+        "homepage_feed",
+        "category_browse",
+        "recommendations",
+        "promos_banners",
+        "reorder_history",
+        "external_social",
+        "word_of_mouth"
+      ],
+      "example_outputs": ["Most exploration attempts start in search", "Homepage rarely surfaces unfamiliar categories"]
+    },
+    {
+      "id": "rq4_info_needs",
+      "question": "What information do users need before experimenting with a new category?",
+      "insight_type": "info_needs",
+      "name": "Trust / information needs",
+      "description": "Specific information gaps that must close before trial (expiry, origin, reviews, unit price, etc.).",
+      "primary_barriers": ["info_trust_gap", "trust_quality", "price_value", "freshness_spoilage"],
+      "info_need_tags": [
+        "expiry_date",
+        "origin_source",
+        "ingredients",
+        "unit_price",
+        "customer_photos",
+        "ratings_reviews",
+        "brand_authenticity",
+        "storage_handling",
+        "return_refund_policy",
+        "portion_size_clarity"
+      ],
+      "example_outputs": ["Need visible expiry on dairy PDPs", "Want customer photos for produce quality"]
+    },
+    {
+      "id": "rq5_receptive_segments",
+      "question": "Which user segments are most receptive to category exploration?",
+      "insight_type": "receptive_segments",
+      "name": "Receptive segments",
+      "description": "Language/pattern proxies for users more open to trying new categories.",
+      "segment_proxies": [
+        "variety_seeker",
+        "deal_seeker",
+        "health_conscious",
+        "new_parent",
+        "pet_owner",
+        "bulk_household",
+        "late_night_convenience",
+        "premium_willing",
+        "complaint_heavy",
+        "unknown"
+      ],
+      "example_outputs": ["Health-conscious users ask for organic but cite discovery gaps"]
+    },
+    {
+      "id": "rq6_interventions",
+      "question": "Where should the product intervene to improve cross-category exploration?",
+      "insight_type": "opportunity_briefs",
+      "name": "Opportunity briefs",
+      "description": "Actionable barrier × segment × lever recommendations grounded in evidence quotes.",
+      "levers": [
+        "search_relevance",
+        "merchandising_placement",
+        "trust_content_pdp",
+        "trial_packs_sampling",
+        "personalized_recommendations",
+        "promo_education",
+        "assortment_expansion",
+        "post_purchase_recovery"
+      ],
+      "example_outputs": ["Trial packs + expiry clarity for dairy explorers"]
+    }
+  ],
+  "sentiment_labels": [
+    {"id": "positive", "description": "Overall positive toward product/category/experience"},
+    {"id": "neutral", "description": "Mixed, factual, or unclear polarity"},
+    {"id": "negative", "description": "Overall negative toward product/category/experience"}
+  ],
+  "theme_guidelines": {
+    "definition": "A theme is a recurring, human-readable claim about user needs or barriers, supported by multiple evidence quotes.",
+    "naming": "Use short noun phrases (e.g. 'Dairy near-expiry anxiety'), not full sentences.",
+    "non_themes": ["Single-user rants with no pattern", "Off-topic app bugs unless tied to exploration"]
+  }
+}

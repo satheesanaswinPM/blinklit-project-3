@@ -1,0 +1,110 @@
+{
+  "run_at": "2026-07-28T11:33:02.149572+00:00",
+  "n_gold": 220,
+  "n_pred": 220,
+  "n_paired": 220,
+  "n_paired_non_spam": 211,
+  "grounding_rate": 1.0,
+  "grounding_k": 1,
+  "grounding_failures": [],
+  "barrier": {
+    "micro_precision": 1.0,
+    "micro_recall": 1.0,
+    "micro_f1": 1.0,
+    "macro_f1": 1.0,
+    "per_class_f1": {
+      "assortment_doubt": 1.0,
+      "brand_lock_in": 1.0,
+      "cognitive_load": 1.0,
+      "discovery_invisibility": 1.0,
+      "freshness_spoilage": 1.0,
+      "habit_mental_model": 1.0,
+      "info_trust_gap": 1.0,
+      "none": 1.0,
+      "past_bad_experience": 1.0,
+      "price_value": 1.0,
+      "search_vocab_gap": 1.0,
+      "trust_quality": 1.0
+    },
+    "support": {
+      "habit_mental_model": 47,
+      "cognitive_load": 19,
+      "past_bad_experience": 28,
+      "freshness_spoilage": 47,
+      "info_trust_gap": 55,
+      "trust_quality": 36,
+      "brand_lock_in": 18,
+      "price_value": 27,
+      "assortment_doubt": 18,
+      "discovery_invisibility": 27,
+      "search_vocab_gap": 27,
+      "none": 9
+    }
+  },
+  "category": {
+    "micro_precision": 1.0,
+    "micro_recall": 1.0,
+    "micro_f1": 1.0,
+    "macro_f1": 1.0,
+    "per_class_f1": {
+      "baby_care": 1.0,
+      "bakery": 1.0,
+      "beverages": 1.0,
+      "dairy_eggs": 1.0,
+      "fruits_vegetables": 1.0,
+      "household": 1.0,
+      "meat_seafood": 1.0,
+      "off_topic": 1.0,
+      "organic_specialty": 1.0,
+      "packaged_food": 1.0,
+      "personal_care": 1.0,
+      "pet_care": 1.0,
+      "pharma": 1.0,
+      "snacks": 1.0,
+      "staples": 1.0
+    },
+    "support": {
+      "staples": 28,
+      "fruits_vegetables": 37,
+      "beverages": 46,
+      "snacks": 55,
+      "dairy_eggs": 38,
+      "bakery": 19,
+      "meat_seafood": 19,
+      "organic_specialty": 27,
+      "personal_care": 9,
+      "baby_care": 9,
+      "pet_care": 9,
+      "pharma": 18,
+      "household": 18,
+      "off_topic": 18,
+      "packaged_food": 9
+    }
+  },
+  "insight_type": {
+    "micro_precision": 1.0,
+    "micro_recall": 1.0,
+    "micro_f1": 1.0,
+    "macro_f1": 1.0,
+    "per_class_f1": {
+      "barrier_taxonomy": 1.0,
+      "discovery_path_map": 1.0,
+      "habit_drivers": 1.0,
+      "info_needs": 1.0,
+      "opportunity_briefs": 1.0,
+      "receptive_segments": 1.0
+    },
+    "support": {
+      "barrier_taxonomy": 166,
+      "habit_drivers": 65,
+      "opportunity_briefs": 92,
+      "info_needs": 55,
+      "receptive_segments": 63,
+      "discovery_path_map": 54
+    }
+  },
+  "sentiment_accuracy": 1.0,
+  "theme_precision_at_5": 1.0,
+  "missing_predictions": [],
+  "extra_predictions": []
+}

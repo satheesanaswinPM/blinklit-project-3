@@ -1,0 +1,10 @@
+id,source,text,url,created_at
+gold_0003,play_store,Tried ordering chicken once and it smelled off. Never buying meat or seafood from quick commerce again.,https://example.local/feedback/3,2026-06-01T00:00:00+00:00
+gold_0010,play_store,Searched for gluten free atta and got random snacks. I don't know what query to use for specialty staples.,https://example.local/feedback/10,2026-06-01T00:00:00+00:00
+gold_0017,play_store,App keeps crashing on checkout. Payment failed three times today.,https://example.local/feedback/17,2026-06-01T00:00:00+00:00
+gold_0027,play_store,Tried ordering chicken once and it smelled off. Never buying meat or seafood from quick commerce again. Happened this month.,https://example.local/feedback/27,2026-06-01T00:00:00+00:00
+gold_0034,play_store,Searched for gluten free atta and got random snacks. I don't know what query to use for specialty staples. Happened this month.,https://example.local/feedback/34,2026-06-01T00:00:00+00:00
+gold_0041,play_store,App keeps crashing on checkout. Payment failed three times today. Happened this month.,https://example.local/feedback/41,2026-06-01T00:00:00+00:00
+extra_play_001,play_store,Search for protein powder shows snacks. Hard to discover wellness and pharma categories.,https://example.local/play/1,2026-05-11T10:00:00+00:00
+extra_play_002,play_store,Baby wipes are fine but unit price is unclear so I won't switch pack sizes or try another brand.,https://example.local/play/2,2026-05-16T10:00:00+00:00
+extra_play_003,play_store,"App crash on checkout is annoying. Separately, I still won't try seafood after one spoiled order.",https://example.local/play/3,2026-05-24T10:00:00+00:00

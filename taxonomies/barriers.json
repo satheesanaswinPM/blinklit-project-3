@@ -1,0 +1,84 @@
+{
+  "version": "0.1.0",
+  "description": "Barrier taxonomy v0 — why users hesitate to explore or buy unfamiliar categories.",
+  "barriers": [
+    {
+      "id": "trust_quality",
+      "name": "Trust / quality risk",
+      "description": "Fear that unfamiliar products or brands will be low quality, fake, or inconsistent.",
+      "examples": ["Don't trust unknown brands", "Quality looks shady", "Afraid of adulteration"]
+    },
+    {
+      "id": "price_value",
+      "name": "Price / value uncertainty",
+      "description": "Unclear whether the price is fair versus kirana, supermarket, or known brands.",
+      "examples": ["Too expensive to try", "Not sure if worth the money", "Cheaper elsewhere"]
+    },
+    {
+      "id": "freshness_spoilage",
+      "name": "Freshness / spoilage fear",
+      "description": "Worry that perishables will arrive stale, near expiry, or poorly handled.",
+      "examples": ["Milk always near expiry", "Veggies look old", "Scared of spoiled meat"]
+    },
+    {
+      "id": "brand_lock_in",
+      "name": "Substitution / brand lock-in",
+      "description": "Strong preference for a known brand or SKU; unwilling to substitute.",
+      "examples": ["Only buy Amul", "Don't want alternatives", "Stick to what I know"]
+    },
+    {
+      "id": "discovery_invisibility",
+      "name": "Discovery invisibility",
+      "description": "User does not see or notice other categories; assortment feels invisible in the journey.",
+      "examples": ["Didn't know you sell this", "Never showed up for me", "Hard to find new stuff"]
+    },
+    {
+      "id": "search_vocab_gap",
+      "name": "Search vocabulary gap",
+      "description": "User cannot formulate the right query or synonyms; search fails to surface the category.",
+      "examples": ["Searched but nothing relevant", "Don't know what to type", "Zero results"]
+    },
+    {
+      "id": "assortment_doubt",
+      "name": "Assortment doubt",
+      "description": "Belief that the platform lacks depth, preferred variants, sizes, or specialty items.",
+      "examples": ["Limited options", "My size/brand missing", "Not enough variety"]
+    },
+    {
+      "id": "habit_mental_model",
+      "name": "Habit / mental model",
+      "description": "Platform is mentally slotted for only a few use cases (e.g. emergency snacks).",
+      "examples": ["Only for late night snacks", "Not for monthly groceries", "I use it for basics only"]
+    },
+    {
+      "id": "cognitive_load",
+      "name": "Time / cognitive load",
+      "description": "Exploring new categories feels effortful; user wants fast reorder of known items.",
+      "examples": ["No time to browse", "Too many choices", "Just want my usual list"]
+    },
+    {
+      "id": "past_bad_experience",
+      "name": "Past bad experience",
+      "description": "A previous negative order in that category blocks retry or adjacent exploration.",
+      "examples": ["Tried once, never again", "Got rotten fruit last time", "Refund hassle put me off"]
+    },
+    {
+      "id": "info_trust_gap",
+      "name": "Missing information before trying",
+      "description": "Needs more info (expiry, origin, ingredients, reviews, unit price) before experimenting.",
+      "examples": ["No expiry shown clearly", "Need ingredients list", "Want real customer photos"]
+    },
+    {
+      "id": "other",
+      "name": "Other / unspecified",
+      "description": "Barrier present but not covered by taxonomy; queue for taxonomy revision.",
+      "examples": []
+    },
+    {
+      "id": "none",
+      "name": "No exploration barrier",
+      "description": "Feedback is positive or unrelated to category exploration hesitation.",
+      "examples": ["Love trying new categories", "App crash complaint only"]
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "version": "0.1.0",
+  "description": "Quick-commerce category taxonomy for mapping feedback language to platform categories.",
+  "categories": [
+    {
+      "id": "fruits_vegetables",
+      "name": "Fruits & Vegetables",
+      "aliases": ["produce", "veggies", "fruits", "vegetables", "salad", "leafy greens", "fresh produce"],
+      "parent": "fresh"
+    },
+    {
+      "id": "dairy_eggs",
+      "name": "Dairy & Eggs",
+      "aliases": ["milk", "curd", "yogurt", "cheese", "butter", "paneer", "eggs", "dairy"],
+      "parent": "fresh"
+    },
+    {
+      "id": "meat_seafood",
+      "name": "Meat & Seafood",
+      "aliases": ["chicken", "mutton", "fish", "prawns", "meat", "seafood", "eggs nonveg"],
+      "parent": "fresh"
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery & Bread",
+      "aliases": ["bread", "pav", "buns", "cake", "bakery", "croissant"],
+      "parent": "fresh"
+    },
+    {
+      "id": "beverages",
+      "name": "Beverages",
+      "aliases": ["drinks", "juice", "soda", "soft drink", "tea", "coffee", "water", "energy drink"],
+      "parent": "packaged"
+    },
+    {
+      "id": "snacks",
+      "name": "Snacks & Namkeen",
+      "aliases": ["chips", "namkeen", "biscuits", "cookies", "chocolate", "candy", "munchies"],
+      "parent": "packaged"
+    },
+    {
+      "id": "staples",
+      "name": "Staples & Cooking Essentials",
+      "aliases": ["rice", "atta", "dal", "oil", "ghee", "spices", "masala", "flour", "pulses"],
+      "parent": "packaged"
+    },
+    {
+      "id": "packaged_food",
+      "name": "Packaged Food",
+      "aliases": ["ready to eat", "noodles", "pasta", "sauce", "ketchup", "instant food", "frozen food"],
+      "parent": "packaged"
+    },
+    {
+      "id": "personal_care",
+      "name": "Personal Care",
+      "aliases": ["shampoo", "soap", "toothpaste", "skincare", "deodorant", "cosmetics", "hygiene"],
+      "parent": "household"
+    },
+    {
+      "id": "household",
+      "name": "Household & Cleaning",
+      "aliases": ["detergent", "cleaner", "dishwasher", "tissue", "toilet paper", "home care"],
+      "parent": "household"
+    },
+    {
+      "id": "baby_care",
+      "name": "Baby Care",
+      "aliases": ["diapers", "baby food", "formula", "wipes", "baby"],
+      "parent": "household"
+    },
+    {
+      "id": "pet_care",
+      "name": "Pet Care",
+      "aliases": ["dog food", "cat food", "pet", "litter"],
+      "parent": "household"
+    },
+    {
+      "id": "pharma",
+      "name": "Pharma & Wellness",
+      "aliases": ["medicine", "otc", "vitamins", "supplements", "first aid"],
+      "parent": "wellness"
+    },
+    {
+      "id": "organic_specialty",
+      "name": "Organic & Specialty",
+      "aliases": ["organic", "gluten free", "vegan specialty", "imported", "gourmet"],
+      "parent": "specialty"
+    },
+    {
+      "id": "unknown",
+      "name": "Unknown / Unmapped",
+      "aliases": [],
+      "parent": null
+    },
+    {
+      "id": "off_topic",
+      "name": "Off-topic (non-category)",
+      "aliases": ["app crash", "delivery partner", "payment", "refund", "customer support"],
+      "parent": null
+    }
+  ]
+}

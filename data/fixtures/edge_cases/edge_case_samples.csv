@@ -1,0 +1,10 @@
+id,source,text,expected_edge_case
+ec_hinglish,social,"Yaar veggies quality risky lagti hai, isliye sirf biscuits aur cold drink order karta hoon.",N-04/I-04 code-mixed
+ec_sarcasm,product_review,"Great service lol, got rotten tomatoes again. Super fresh experience.",N-04 sarcasm
+ec_duplicate_a,app_store,"Milk always near expiry. Won't try other dairy brands.",I-02 duplicate
+ec_duplicate_b,reddit,"Milk always near expiry. Won't try other dairy brands.",I-02 duplicate
+ec_offtopic,play_store,"App keeps crashing on checkout. Payment failed three times today.",N-06 off-topic
+ec_multibarrier,product_review,"Too pricey and I don't trust freshness of meat here so I stick to snacks.",N-09 multi-barrier
+ec_emoji,social,"🔥🔥🔥",I-05 emoji-only
+ec_competitor,forum,"Swiggy Instamart has better organic options; here I can't find them in search.",N-07 competitor
+ec_seasonal,reddit,"Only during Diwali I look for dry fruits here; rest of year I ignore that category.",N-15 seasonal

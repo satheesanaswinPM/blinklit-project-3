@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "source": "openai",
+    "themes_path": "C:\\Users\\sathe\\blinkit grad project 2\\output\\themes.csv",
+    "sentiment_path": "C:\\Users\\sathe\\blinkit grad project 2\\output\\sentiment.csv",
+    "segments_path": "C:\\Users\\sathe\\blinkit grad project 2\\output\\user_segments.csv",
+    "model": "llama-3.3-70b-versatile",
+    "n_insights": 7,
+    "pipeline": "main.py"
+  },
+  "research_questions": [
+    "Why do users repeatedly buy from the same categories?",
+    "What prevents users from exploring new categories?",
+    "How do users discover products today?",
+    "What role do habits play?",
+    "What frustrations emerge repeatedly?",
+    "Which user segments experiment more?",
+    "What unmet needs emerge?"
+  ],
+  "insights": [
+    {
+      "Question": "Why do users repeatedly buy from the same categories?",
+      "Title": "Convenience and Affordability Drive Repeat Purchases",
+      "Evidence": "Keywords like 'perfect app', 'easily affordable', and 'nice' (n=11) suggest users value convenience and affordability, leading to repeat purchases from the same categories.",
+      "Business Impact": "Understanding what drives repeat purchases can help inform strategies to increase customer retention and loyalty.",
+      "Opportunity": "Optimize the app to make repeat purchases easier and more convenient, potentially through features like one-click reordering or personalized product recommendations.",
+      "Priority": "High",
+      "Recommendation": "Implement a 'frequently bought together' feature and personalized product recommendations based on purchase history."
+    },
+    {
+      "Question": "What prevents users from exploring new categories?",
+      "Title": "Surge Charges and Taxes Discourage Exploration",
+      "Evidence": "Negative reviews mention 'too much surge charge and taxes' as a frustration, indicating that high fees may prevent users from exploring new categories.",
+      "Business Impact": "High fees can deter users from trying new products or categories, potentially limiting growth and customer satisfaction.",
+      "Opportunity": "Consider revising the pricing strategy to make it more competitive and transparent, potentially offering discounts or promotions for new category exploration.",
+      "Priority": "Medium",
+      "Recommendation": "Conduct a pricing strategy review to identify opportunities to reduce or simplify fees, and consider offering limited-time discounts for first-time category purchases."
+    },
+    {
+      "Question": "How do users discover products today?",
+      "Title": "Users Rely on App Convenience and Word of Mouth",
+      "Evidence": "Reviews highlight the app's convenience and ease of use, with keywords like 'nice app' (n=11) and 'perfect app' (example review), suggesting users discover products through the app and word of mouth.",
+      "Business Impact": "Understanding how users discover products can inform marketing and product development strategies to increase visibility and appeal.",
+      "Opportunity": "Enhance the app's discovery features, such as search, recommendations, and reviews, to make it easier for users to find new products and categories.",
+      "Priority": "High",
+      "Recommendation": "Improve the app's search functionality and implement a user review and rating system to facilitate discovery and trust-building."
+    },
+    {
+      "Question": "What role do habits play?",
+      "Title": "Habits Drive Routine Purchases",
+      "Evidence": "The 'Routine Buyers' segment (n=7) and reviews like 'good' and 'good service' suggest that habits play a significant role in driving routine purchases.",
+      "Business Impact": "Understanding the role of habits can help inform strategies to increase customer retention and loyalty.",
+      "Opportunity": "Develop features that support and reinforce users' habits, such as subscription services or personalized reminders for routine purchases.",
+      "Priority": "Medium",
+      "Recommendation": "Introduce a subscription service for frequently purchased items and offer personalized reminders for routine purchases."
+    },
+    {
+      "Question": "What frustrations emerge repeatedly?",
+      "Title": "Delivery and Payment Issues Cause Frustration",
+      "Evidence": "Negative reviews repeatedly mention issues with delivery (e.g., 'delivery person handed over only one item') and payment (e.g., 'doesn't carry any sort of balance while given cash on delivery'), with 8 negative reviews out of 35 total reviews.",
+      "Business Impact": "Recurring frustrations can lead to customer dissatisfaction and churn, ultimately affecting retention and growth.",
+      "Opportunity": "Address these issues by improving delivery and payment processes, potentially through better training for delivery personnel or more flexible payment options.",
+      "Priority": "High",
+      "Recommendation": "Implement a more robust delivery tracking system and provide additional payment options, such as digital wallets or cashless payment methods."
+    },
+    {
+      "Question": "Which user segments experiment more?",
+      "Title": "Explorers and Impulse Buyers Are More Experimental",
+      "Evidence": "The 'Explorers' (n=3) and 'Impulse Buyers' (n=12) segments, characterized by reviews like 'nice' and 'best hai', suggest that these users are more open to trying new products and categories.",
+      "Business Impact": "Understanding which segments are more experimental can help inform marketing and product development strategies to increase customer engagement and retention.",
+      "Opportunity": "Develop targeted marketing campaigns and product recommendations tailored to these segments' preferences and behaviors.",
+      "Priority": "Medium",
+      "Recommendation": "Create targeted marketing campaigns and product recommendations for the 'Explorers' and 'Impulse Buyers' segments, highlighting new and trending products."
+    },
+    {
+      "Question": "What unmet needs emerge?",
+      "Title": "Users Need Better Change Management and Location Updates",
+      "Evidence": "Reviews like 'doesn't carry any sort of balance while given cash on delivery' and 'poor system update location in app properly' (n=5) highlight unmet needs for better change management and location updates.",
+      "Business Impact": "Unmet needs can lead to customer dissatisfaction and churn if left unaddressed, ultimately affecting retention and growth.",
+      "Opportunity": "Address these unmet needs by implementing features like automatic change calculation and real-time location updates.",
+      "Priority": "Medium",
+      "Recommendation": "Develop and implement a feature for automatic change calculation and real-time location updates to improve the user experience."
+    }
+  ]
+}

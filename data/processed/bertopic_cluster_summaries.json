@@ -1,0 +1,233 @@
+[
+  {
+    "cluster_id": 0,
+    "label": "cash_delivery_service_change",
+    "keywords": [
+      "cash",
+      "delivery",
+      "service",
+      "change",
+      "carry",
+      "458",
+      "like",
+      "superb"
+    ],
+    "size": 7,
+    "summary": "Users discuss cash, delivery, service, change, carry, 458, like, superb. Example: \"superb\"",
+    "representative_reviews": [
+      "superb",
+      "like service give superb",
+      "try increase delivery distance srinagar part eg pampore"
+    ],
+    "review_indices": [
+      8,
+      14,
+      18,
+      19,
+      29,
+      32,
+      34
+    ]
+  },
+  {
+    "cluster_id": 1,
+    "label": "app_app good_location app_location",
+    "keywords": [
+      "app",
+      "app good",
+      "location app",
+      "location",
+      "poor",
+      "good app",
+      "good",
+      "app properly"
+    ],
+    "size": 6,
+    "summary": "Users discuss app, app good, location app, location, poor, good app, good, app properly. Example: \"communication skill poor\"",
+    "representative_reviews": [
+      "communication skill poor",
+      "poor system update location app properly survive lot valuable time add location app also delivary man ugly behave",
+      "luvvv app"
+    ],
+    "review_indices": [
+      5,
+      6,
+      9,
+      23,
+      24,
+      27
+    ]
+  },
+  {
+    "cluster_id": 2,
+    "label": "best_hai_best super_super acha",
+    "keywords": [
+      "best",
+      "hai",
+      "best super",
+      "super acha",
+      "best hai",
+      "awesome best",
+      "awesome",
+      "acha hai"
+    ],
+    "size": 5,
+    "summary": "Users discuss best, hai, best super, super acha, best hai, awesome best, awesome, acha hai. Example: \"best hai\"",
+    "representative_reviews": [
+      "best hai",
+      "awesome",
+      "best"
+    ],
+    "review_indices": [
+      2,
+      16,
+      20,
+      22,
+      30
+    ]
+  },
+  {
+    "cluster_id": 3,
+    "label": "good good_good__",
+    "keywords": [
+      "good good",
+      "good",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "size": 4,
+    "summary": "Users discuss good good, good, , , , , , . Example: \"good\"",
+    "representative_reviews": [
+      "good",
+      "good well",
+      "good"
+    ],
+    "review_indices": [
+      3,
+      10,
+      15,
+      26
+    ]
+  },
+  {
+    "cluster_id": 4,
+    "label": "charge_item_time_35 minute",
+    "keywords": [
+      "charge",
+      "item",
+      "time",
+      "35 minute",
+      "35",
+      "ago",
+      "4050 rarely",
+      "4050"
+    ],
+    "size": 3,
+    "summary": "Users discuss charge, item, time, 35 minute, 35, ago, 4050 rarely, 4050. Example: \"order two item long time ago delivery person hand one item charge price bothno money refund even inform matterperhaps theyblinkit think minor incident\"",
+    "representative_reviews": [
+      "order two item long time ago delivery person hand one item charge price bothno money refund even inform matterperhaps theyblinkit think minor incident",
+      "much surge charge tax",
+      "every time charge high demand charge handle charge upto 4050 r rarely use thisto deliver 35 minute"
+    ],
+    "review_indices": [
+      4,
+      13,
+      31
+    ]
+  },
+  {
+    "cluster_id": 5,
+    "label": "great_order_time_bag",
+    "keywords": [
+      "great",
+      "order",
+      "time",
+      "bag",
+      "blinkit deliver",
+      "bag dirty",
+      "blikit",
+      "blikit bag"
+    ],
+    "size": 3,
+    "summary": "Users discuss great, order, time, bag, blinkit deliver, bag dirty, blikit, blikit bag. Example: \"great\"",
+    "representative_reviews": [
+      "great",
+      "order first time blinkit deliver without blikit bag dirty hand delievery boy",
+      "delivered time handle order care great service"
+    ],
+    "review_indices": [
+      17,
+      25,
+      28
+    ]
+  },
+  {
+    "cluster_id": 6,
+    "label": "nice_nice nice_nice app_app",
+    "keywords": [
+      "nice",
+      "nice nice",
+      "nice app",
+      "app",
+      "",
+      "",
+      "",
+      ""
+    ],
+    "size": 3,
+    "summary": "Users discuss nice, nice nice, nice app, app, , , , . Example: \"nice\"",
+    "representative_reviews": [
+      "nice",
+      "nice",
+      "nice app"
+    ],
+    "review_indices": [
+      1,
+      12,
+      21
+    ]
+  },
+  {
+    "cluster_id": 7,
+    "label": "area thats_exellent_provide_provide area",
+    "keywords": [
+      "area thats",
+      "exellent",
+      "provide",
+      "provide area",
+      "thats",
+      "thats annoy",
+      "annoy exellent",
+      "area"
+    ],
+    "size": 2,
+    "summary": "Users discuss area thats, exellent, provide, provide area, thats, thats annoy, annoy exellent, area. Example: \"provide area thats annoy\"",
+    "representative_reviews": [
+      "provide area thats annoy",
+      "exellent"
+    ],
+    "review_indices": [
+      7,
+      33
+    ]
+  },
+  {
+    "cluster_id": -1,
+    "label": "Outliers / mixed",
+    "keywords": [],
+    "size": 2,
+    "summary": "Users discuss general feedback. Example: \"perfect app order item easily affordable\"",
+    "representative_reviews": [
+      "perfect app order item easily affordable",
+      "good service"
+    ],
+    "review_indices": [
+      0,
+      11
+    ]
+  }
+]

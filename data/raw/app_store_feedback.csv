@@ -1,0 +1,10 @@
+id,source,text,url,created_at
+gold_0002,app_store,"My reorder list is always the same milk, eggs, and bread. No time to browse new categories after work.",https://example.local/feedback/2,2026-06-01T00:00:00+00:00
+gold_0007,app_store,Personal care is marked up versus the supermarket. Not worth trying new shampoos here unless there's a clear deal.,https://example.local/feedback/7,2026-06-01T00:00:00+00:00
+gold_0016,app_store,Too many choices in snacks aisle. I just reorder the same chips because browsing takes forever.,https://example.local/feedback/16,2026-06-01T00:00:00+00:00
+gold_0026,app_store,"My reorder list is always the same milk, eggs, and bread. No time to browse new categories after work. Happened this month.",https://example.local/feedback/26,2026-06-01T00:00:00+00:00
+gold_0031,app_store,Personal care is marked up versus the supermarket. Not worth trying new shampoos here unless there's a clear deal. Happened this month.,https://example.local/feedback/31,2026-06-01T00:00:00+00:00
+gold_0040,app_store,Too many choices in snacks aisle. I just reorder the same chips because browsing takes forever. Happened this month.,https://example.local/feedback/40,2026-06-01T00:00:00+00:00
+extra_app_001,app_store,Love the speed but I only ever reorder milk and eggs. The app never nudges me toward personal care.,https://example.local/app/1,2026-05-10T10:00:00+00:00
+extra_app_002,app_store,Too many snack choices. I just reorder the same biscuits because browsing takes forever after work.,https://example.local/app/2,2026-05-15T10:00:00+00:00
+extra_app_003,app_store,Personal care feels marked up versus the supermarket. Need a clear deal before trying a new shampoo here.,https://example.local/app/3,2026-05-22T10:00:00+00:00

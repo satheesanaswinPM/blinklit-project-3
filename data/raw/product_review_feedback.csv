@@ -1,0 +1,12 @@
+id,source,text,url,created_at
+gold_0004,product_review,Milk and curd are often close to expiry. Until you show clear expiry on the product page I won't try other dairy brands.,https://example.local/feedback/4,2026-06-01T00:00:00+00:00
+gold_0008,product_review,Baby diapers seem expensive and I can't tell unit price easily. Hard to switch from my usual pack size.,https://example.local/feedback/8,2026-06-01T00:00:00+00:00
+gold_0012,product_review,Bakery section has only 2 bread options. Not enough variety to switch from my kirana for breakfast items.,https://example.local/feedback/12,2026-06-01T00:00:00+00:00
+gold_0019,product_review,"Great service lol, got rotten tomatoes again. Super fresh experience.",https://example.local/feedback/19,2026-06-01T00:00:00+00:00
+gold_0028,product_review,Milk and curd are often close to expiry. Until you show clear expiry on the product page I won't try other dairy brands. Happened this month.,https://example.local/feedback/28,2026-06-01T00:00:00+00:00
+gold_0032,product_review,Baby diapers seem expensive and I can't tell unit price easily. Hard to switch from my usual pack size. Happened this month.,https://example.local/feedback/32,2026-06-01T00:00:00+00:00
+gold_0036,product_review,Bakery section has only 2 bread options. Not enough variety to switch from my kirana for breakfast items. Happened this month.,https://example.local/feedback/36,2026-06-01T00:00:00+00:00
+gold_0043,product_review,"Great service lol, got rotten tomatoes again. Super fresh experience. Happened this month.",https://example.local/feedback/43,2026-06-01T00:00:00+00:00
+extra_review_001,product_review,Organic honey looks premium but without origin details and customer photos I won't try a new brand.,https://example.local/review/1,2026-05-13T10:00:00+00:00
+extra_review_002,product_review,Curd arrived close to expiry again. Until expiry is clear on the product page I avoid new dairy brands.,https://example.local/review/2,2026-05-18T10:00:00+00:00
+extra_review_003,product_review,Would buy more household cleaners if the return policy for damaged bottles was clearer.,https://example.local/review/3,2026-05-25T10:00:00+00:00

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local/phase0/gold_label.schema.json",
+  "title": "GoldLabel",
+  "type": "object",
+  "required": [
+    "id",
+    "source",
+    "text",
+    "sentiment",
+    "categories",
+    "barriers",
+    "insight_types",
+    "theme",
+    "evidence_spans",
+    "is_spam",
+    "is_off_topic_discovery",
+    "confidence",
+    "taxonomy_version",
+    "labeled_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "string",
+      "enum": ["app_store", "play_store", "reddit", "product_review", "forum", "social", "nps", "other"]
+    },
+    "text": { "type": "string", "minLength": 1 },
+    "url": { "type": ["string", "null"] },
+    "created_at": { "type": ["string", "null"] },
+    "sentiment": { "type": "string", "enum": ["positive", "neutral", "negative"] },
+    "categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "barriers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "insight_types": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "discovery_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "info_needs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "segment_proxies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "theme": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "evidence_spans": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "is_spam": { "type": "boolean" },
+    "is_off_topic_discovery": { "type": "boolean" },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "notes": { "type": ["string", "null"] },
+    "adjudicated": { "type": "boolean", "default": false },
+    "annotator_id": { "type": ["string", "null"] },
+    "taxonomy_version": { "type": "string" },
+    "labeled_at": { "type": "string" },
+    "channel_meta": { "type": "object", "additionalProperties": true }
+  },
+  "additionalProperties": false
+}
