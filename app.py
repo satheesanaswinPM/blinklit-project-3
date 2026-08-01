@@ -1655,123 +1655,177 @@ def _workflow_counts() -> dict[str, int]:
 
 
 def render_end_to_end_workflow() -> None:
-    """Professional pipeline architecture diagram with live artifact counts."""
+    """Vertical top-to-bottom pipeline flowchart with live artifact counts."""
     c = _workflow_counts()
+    raw_total = c["play_raw"] + c["app_store_raw"] + c["reddit_raw"] + c["youtube_raw"]
+
+    def _join(label: str) -> str:
+        return f"""
+  <div class="vflow-join">
+    <div class="shaft"></div>
+    <div class="label">{html.escape(label)}</div>
+    <div class="shaft-bottom"></div>
+    <div class="arrow"></div>
+  </div>"""
+
     panel_start(
         "Pipeline architecture",
-        "Research question → multi-source ingestion → corpus engineering → representation learning → exploration labeling → product synthesis → decision surfaces.",
+        "Top-to-bottom control flow from research framing through ingestion, NLP, exploration labeling, synthesis, and decision surfaces.",
     )
     st.markdown(
         f"""
 <div class="flow-wrap">
-  <div class="arch-rail">
-    <div class="arch-step">
-      <div class="arch-idx">01 · Ingest</div>
-      <div class="arch-title">Multi-source collection</div>
-      <div class="arch-tech">Play scraper · App Store RSS · Reddit PRAW · YouTube Data API v3</div>
-      <div class="arch-meta">{c["play_raw"] + c["app_store_raw"] + c["reddit_raw"] + c["youtube_raw"]:,} raw records</div>
+  <div class="vflow">
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">01</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Frame</div>
+          <div class="vflow-title">Research question</div>
+          <div class="vflow-tech">Define the decision problem and success metric for category exploration</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Primary question</span><span class="v">Why don’t users explore new categories?</span><span class="s">docs/problemstatement.md</span></div>
+        <div class="vflow-node"><span class="k">Outcome target</span><span class="v">Increase new-category trial among MACs</span><span class="s">product + research framing</span></div>
+      </div>
     </div>
-    <div class="arch-step">
-      <div class="arch-idx">02 · Unify</div>
-      <div class="arch-title">Corpus engineering</div>
-      <div class="arch-tech">Schema normalize · soft-dedupe · preprocess</div>
-      <div class="arch-meta">{c["merged"]:,} merged · {c["cleaned"]:,} cleaned</div>
+
+    {_join("orchestrator · main.py")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">02</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Ingest</div>
+          <div class="vflow-title">Multi-source collection</div>
+          <div class="vflow-tech">Pull unstructured feedback from storefronts and social surfaces</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Google Play</span><span class="v">{c["play_raw"]:,} reviews</span><span class="s">google-play-scraper</span></div>
+        <div class="vflow-node"><span class="k">App Store</span><span class="v">{c["app_store_raw"]:,} reviews</span><span class="s">iTunes RSS feed</span></div>
+        <div class="vflow-node"><span class="k">Reddit</span><span class="v">{c["reddit_raw"]:,} posts</span><span class="s">PRAW · optional</span></div>
+        <div class="vflow-node"><span class="k">YouTube</span><span class="v">{c["youtube_raw"]:,} comments</span><span class="s">Data API v3 · optional</span></div>
+      </div>
+      <div class="vflow-meta">{raw_total:,} raw records across adapters · plus seed channels when present</div>
     </div>
-    <div class="arch-step">
-      <div class="arch-idx">03 · Embed</div>
-      <div class="arch-title">Representation learning</div>
-      <div class="arch-tech">TF-IDF / Sentence-Transformers → dense vectors</div>
-      <div class="arch-meta">review_embeddings.npy</div>
+
+    {_join("schema normalize · soft-dedupe")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">03</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Unify</div>
+          <div class="vflow-title">Corpus engineering</div>
+          <div class="vflow-tech">Align sources to a single review schema, then clean for NLP</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Merged corpus</span><span class="v">{c["merged"]:,} items</span><span class="s">merged_reviews.csv</span></div>
+        <div class="vflow-node"><span class="k">Cleaned corpus</span><span class="v">{c["cleaned"]:,} items</span><span class="s">preprocessed_reviews.csv</span></div>
+        <div class="vflow-node"><span class="k">Unified fields</span><span class="v">id · source · date · rating · text</span><span class="s">discovery_engine/corpus/merge.py</span></div>
+      </div>
     </div>
-    <div class="arch-step">
-      <div class="arch-idx">04 · Model</div>
-      <div class="arch-title">Unsupervised analysis</div>
-      <div class="arch-tech">BERTopic · RoBERTa sentiment · KMeans k=4</div>
-      <div class="arch-meta">{c["themes"]:,} themes · {c["sentiment"]:,} labeled</div>
+
+    {_join("vectorize · PHASE1_EMBEDDING")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">04</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Represent</div>
+          <div class="vflow-title">Representation learning</div>
+          <div class="vflow-tech">Encode cleaned documents into a shared embedding space</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Embedding backend</span><span class="v">TF-IDF or Sentence-Transformers</span><span class="s">embed_cache.py</span></div>
+        <div class="vflow-node"><span class="k">Artifact</span><span class="v">Dense document matrix</span><span class="s">review_embeddings.npy</span></div>
+      </div>
     </div>
-    <div class="arch-step">
-      <div class="arch-idx">05 · Label</div>
-      <div class="arch-title">Exploration tagging</div>
-      <div class="arch-tech">Barrier taxonomy · signal classification · relevance filter</div>
-      <div class="arch-meta">{c["exploration_relevant"]:,} relevant / {c["exploration"]:,}</div>
+
+    {_join("parallel analysis passes")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">05</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Model</div>
+          <div class="vflow-title">Unsupervised + supervised NLP</div>
+          <div class="vflow-tech">Discover themes, score affect, and cluster behavioral segments</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Theme discovery</span><span class="v">BERTopic · {c["themes"]:,} topics</span><span class="s">output/themes.csv</span></div>
+        <div class="vflow-node"><span class="k">Sentiment</span><span class="v">RoBERTa 3-class · {c["sentiment"]:,}</span><span class="s">output/sentiment.csv</span></div>
+        <div class="vflow-node"><span class="k">Segments</span><span class="v">KMeans k=4 · {c["segments"]:,}</span><span class="s">Routine · Explorers · Price · Impulse</span></div>
+      </div>
     </div>
-    <div class="arch-step">
-      <div class="arch-idx">06 · Synthesize</div>
-      <div class="arch-title">Research synthesis</div>
-      <div class="arch-tech">JTBD · unmet needs · hypotheses · experiments · category ops</div>
-      <div class="arch-meta">{c["category_ops"]:,} category opportunities</div>
+
+    {_join("relevance filter · barrier taxonomy")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">06</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Label</div>
+          <div class="vflow-title">Exploration tagging</div>
+          <div class="vflow-tech">Classify each item for category-exploration signal and friction</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Relevance</span><span class="v">{c["exploration_relevant"]:,} relevant / {c["exploration"]:,}</span><span class="s">is_relevant + reason</span></div>
+        <div class="vflow-node"><span class="k">Signals</span><span class="v">stuck · blocked · explored · noise</span><span class="s">exploration_signal</span></div>
+        <div class="vflow-node"><span class="k">Barriers</span><span class="v">Multi-label friction tags</span><span class="s">analysis/exploration.py</span></div>
+      </div>
     </div>
+
+    {_join("count-grounded synthesis · optional LLM polish")}
+
+    <div class="vflow-step">
+      <div class="vflow-head">
+        <div class="vflow-num">07</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Synthesize</div>
+          <div class="vflow-title">Research synthesis engine</div>
+          <div class="vflow-tech">Turn tagged evidence into JTBD, unmet needs, hypotheses, and experiments</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Product synthesis</span><span class="v">Barriers · JTBD · unmet needs</span><span class="s">output/synthesis.json</span></div>
+        <div class="vflow-node"><span class="k">Category opportunities</span><span class="v">{c["category_ops"]:,} ranked bets</span><span class="s">opportunity_score</span></div>
+        <div class="vflow-node"><span class="k">Test plan</span><span class="v">Hypotheses + experiments</span><span class="s">metric · guardrail · sample</span></div>
+        <div class="vflow-node"><span class="k">Legacy RQ board</span><span class="v">{c["insights"]:,} insight cards</span><span class="s">output/insights.json</span></div>
+      </div>
+    </div>
+
+    {_join("read-only presentation layer")}
+
+    <div class="vflow-step vflow-terminal">
+      <div class="vflow-head">
+        <div class="vflow-num">08</div>
+        <div class="vflow-titles">
+          <div class="vflow-phase">Present</div>
+          <div class="vflow-title">Decision surfaces</div>
+          <div class="vflow-tech">Streamlit research IA — no live scrape on page load</div>
+        </div>
+      </div>
+      <div class="vflow-body">
+        <div class="vflow-node"><span class="k">Findings Board</span><span class="v">Exec summary · barriers · JTBD</span><span class="s">synthesis consumer</span></div>
+        <div class="vflow-node"><span class="k">Category Opportunities</span><span class="v">Ranked expansion bets</span><span class="s">opportunity backlog</span></div>
+        <div class="vflow-node"><span class="k">Validation · Live · Try-it</span><span class="v">Evidence checks + pipeline status</span><span class="s">quality + ops</span></div>
+        <div class="vflow-node"><span class="k">Quality gates</span><span class="v">{c["gold"]:,} gold labels · schema checks</span><span class="s">eval harness</span></div>
+      </div>
+    </div>
+
   </div>
-
-  <div class="arch-connector"><span class="line"></span><span class="chip">Orchestrator · main.py · 13 stages</span><span class="line"></span></div>
-
-  <div class="arch-lane">
-    <h4>Stage detail · technical control flow</h4>
-    <div class="arch-nodes">
-      <div class="arch-node">
-        <span class="k">Research framing</span>
-        <span class="v">Primary question</span>
-        <span class="s">Why don’t users explore new categories?</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Ingestion adapters</span>
-        <span class="v">Play {c["play_raw"]:,} · iOS {c["app_store_raw"]:,}</span>
-        <span class="s">reddit {c["reddit_raw"]:,} · youtube {c["youtube_raw"]:,}</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Unified corpus</span>
-        <span class="v">merged_reviews.csv</span>
-        <span class="s">id · source · date · rating · text</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">NLP feature store</span>
-        <span class="v">preprocessed + embeddings</span>
-        <span class="s">PHASE1_EMBEDDING=tfidf|st</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Theme discovery</span>
-        <span class="v">BERTopic clustering</span>
-        <span class="s">output/themes.csv · {c["themes"]:,} topics</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Affect scoring</span>
-        <span class="v">3-class sentiment</span>
-        <span class="s">twitter-roberta · {c["sentiment"]:,} rows</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Behavioral segments</span>
-        <span class="v">KMeans prototypes</span>
-        <span class="s">Routine · Explorers · Price · Impulse</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Exploration filter</span>
-        <span class="v">Heuristic multi-label tagger</span>
-        <span class="s">stuck · blocked · explored · noise</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Synthesis engine</span>
-        <span class="v">Corpus-grounded templates + LLM polish</span>
-        <span class="s">output/synthesis.json</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Decision surfaces</span>
-        <span class="v">Streamlit research IA</span>
-        <span class="s">Findings · Opportunities · Validation · Live</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Quality gates</span>
-        <span class="v">Gold labels · schema checks</span>
-        <span class="s">{c["gold"]:,} gold rows · eval harness</span>
-      </div>
-      <div class="arch-node">
-        <span class="k">Runtime contract</span>
-        <span class="v">Read-only dashboard I/O</span>
-        <span class="s">No live scrape on page load</span>
-      </div>
-    </div>
-    <div class="flow-note" style="margin-top:0.85rem">
-      Refresh artifacts: <code>python main.py --skip-collect</code> · Tag only: <code>python -m analysis.exploration</code> · Synthesize: <code>python -m llm.synthesis --no-polish</code>
-    </div>
+  <div class="flow-note">
+    Refresh artifacts: <code>python main.py --skip-collect</code>
+    · Tag: <code>python -m analysis.exploration</code>
+    · Synthesize: <code>python -m llm.synthesis --no-polish</code>
   </div>
 </div>
         """,
