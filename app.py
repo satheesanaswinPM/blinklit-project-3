@@ -1511,180 +1511,85 @@ def _workflow_counts() -> dict[str, int]:
 
 
 def render_end_to_end_workflow() -> None:
-    """Vertical top-to-bottom pipeline flowchart with live artifact counts."""
+    """Layered ASCII flowchart (main steps only) with live artifact counts."""
     c = _workflow_counts()
-    raw_total = c["play_raw"] + c["app_store_raw"] + c["reddit_raw"] + c["youtube_raw"]
+    play = f"{c['play_raw']:,}"
+    app = f"{c['app_store_raw']:,}"
+    reddit = f"{c['reddit_raw']:,}"
+    youtube = f"{c['youtube_raw']:,}"
+    merged = f"{c['merged']:,}"
+    tagged = f"{c['exploration']:,}"
+    relevant = f"{c['exploration_relevant']:,}"
+    themes = f"{c['themes']:,}"
+    sentiment = f"{c['sentiment']:,}"
+    segments = f"{c['segments']:,}"
+    cat_ops = f"{c['category_ops']:,}"
+    insights = f"{c['insights']:,}"
 
-    def _join(label: str) -> str:
-        return f"""
-  <div class="vflow-join">
-    <div class="shaft"></div>
-    <div class="label">{html.escape(label)}</div>
-    <div class="shaft-bottom"></div>
-    <div class="arrow"></div>
-  </div>"""
+    diagram = f"""
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                     LAYER 1 · MULTI-SOURCE SCRAPERS  (scripts/)                     │
+│                                                                                    │
+│  Apple App Store ─ RSS feed ──────────►  app_store_reviews.csv      ({app:>6})     │
+│  Google Play ──── Play scraper ───────►  blinkit_play_reviews.csv   ({play:>6})     │
+│  Reddit ───────── PRAW (optional) ────►  reddit_posts.csv           ({reddit:>6})     │
+│  YouTube ──────── Data API v3 ────────►  youtube_comments.csv        ({youtube:>6})     │
+│  Trustpilot / MouthShut ──────────────►  (DROPPED: bot-walled / JS-rendered)       │
+│  LinkedIn / X / TikTok  ── excluded                                                │
+│         │  soft-dedupe · non-empty text filter · pagination                        │
+└─────────┼──────────────────────────────────────────────────────────────────────┘
+          ▼
+   ┌─────────────┐   merge.py    normalize to 8 fields, drop noise/dupes
+   │  merge.py   ├────────────►  data/processed/merged_reviews.csv   ({merged} items)
+   └─────────────┘               id · source · date · rating · text · author · url · scraped_at
+          │
+          ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                     LAYER 2 · TWO-PASS AI ANALYSIS                                  │
+│                                                                                    │
+│   PASS 1  exploration.py  ── per-item exploration tags ─────────────────────────┐  │
+│      relevance filter · exploration_signal · barriers · categories_mentioned     │  │
+│      themes ({themes}) · sentiment ({sentiment}) · segments ({segments})                        │  │
+│                                              │                                    │  │
+│                                              ▼                                    │  │
+│                    output/exploration_tags.csv  ({tagged} · {relevant} relevant)     │  │
+│                                              │                                    │  │
+│   PASS 2  synthesis.py  ◄────────────────────┘                                   │  │
+│      ┌───────────────────────────┐      ┌──────────────────────────────────┐    │  │
+│      │ PYTHON (deterministic)    │      │ LLM (optional · language only)    │    │  │
+│      │ barriers · signal dist    │  +   │ exec summary polish · narrative   │    │  │
+│      │ category opportunity rank │      │ JTBD / unmet needs wording        │    │  │
+│      │ hypothesis evidence counts│      │ experiment framing                │    │  │
+│      └───────────────────────────┘      └──────────────────────────────────┘    │  │
+│                       └──────────────┬────────────────┘                          │  │
+│                                      ▼                                            │  │
+│              output/synthesis.json  ({cat_ops} category opportunities)             │  │
+│              output/insights.json   ({insights} legacy insight cards)              │  │
+│                                      │                                            │  │
+│   VALIDATE  Validation Desk  ◄───────┤   relevance mix · sample evidence ·        │  │
+│                                      │   source triangulation                      │  │
+│                                      ▼                                            │  │
+│   EXPORT  CSV / JSON downloads from dashboard tabs                                │  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│               LAYER 3 · STREAMLIT DASHBOARD  (app.py)  — reads pre-computed files   │
+│                                                                                    │
+│   Findings Board · Category Opportunities · Validation Desk · Live Pipeline        │
+│   Try-it Console · Evidence Lab · Methodology · Admin (password-gated)             │
+│                                       │                           │                │
+│                                       ▼                           ▼                │
+│                            output/* + data/processed/      main.py (offline run)   │
+└──────────────────────────────────────────────────────────────────────────────────┘
+""".strip("\n")
 
     panel_start(
         "Pipeline architecture",
-        "Top-to-bottom control flow from research framing through ingestion, NLP, exploration labeling, synthesis, and decision surfaces.",
+        "Main control flow only — multi-source scrape → merge → two-pass analysis → dashboard.",
     )
     st.markdown(
-        f"""
-<div class="flow-wrap">
-  <div class="vflow">
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">01</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Frame</div>
-          <div class="vflow-title">Research question</div>
-          <div class="vflow-tech">Define the decision problem and success metric for category exploration</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Primary question</span><span class="v">Why don’t users explore new categories?</span><span class="s">docs/problemstatement.md</span></div>
-        <div class="vflow-node"><span class="k">Outcome target</span><span class="v">Increase new-category trial among MACs</span><span class="s">product + research framing</span></div>
-      </div>
-    </div>
-
-    {_join("orchestrator · main.py")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">02</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Ingest</div>
-          <div class="vflow-title">Multi-source collection</div>
-          <div class="vflow-tech">Pull unstructured feedback from storefronts and social surfaces</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Google Play</span><span class="v">{c["play_raw"]:,} reviews</span><span class="s">google-play-scraper</span></div>
-        <div class="vflow-node"><span class="k">App Store</span><span class="v">{c["app_store_raw"]:,} reviews</span><span class="s">iTunes RSS feed</span></div>
-        <div class="vflow-node"><span class="k">Reddit</span><span class="v">{c["reddit_raw"]:,} posts</span><span class="s">PRAW · optional</span></div>
-        <div class="vflow-node"><span class="k">YouTube</span><span class="v">{c["youtube_raw"]:,} comments</span><span class="s">Data API v3 · optional</span></div>
-      </div>
-      <div class="vflow-meta">{raw_total:,} raw records across adapters · plus seed channels when present</div>
-    </div>
-
-    {_join("schema normalize · soft-dedupe")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">03</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Unify</div>
-          <div class="vflow-title">Corpus engineering</div>
-          <div class="vflow-tech">Align sources to a single review schema, then clean for NLP</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Merged corpus</span><span class="v">{c["merged"]:,} items</span><span class="s">merged_reviews.csv</span></div>
-        <div class="vflow-node"><span class="k">Cleaned corpus</span><span class="v">{c["cleaned"]:,} items</span><span class="s">preprocessed_reviews.csv</span></div>
-        <div class="vflow-node"><span class="k">Unified fields</span><span class="v">id · source · date · rating · text</span><span class="s">discovery_engine/corpus/merge.py</span></div>
-      </div>
-    </div>
-
-    {_join("vectorize · PHASE1_EMBEDDING")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">04</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Represent</div>
-          <div class="vflow-title">Representation learning</div>
-          <div class="vflow-tech">Encode cleaned documents into a shared embedding space</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Embedding backend</span><span class="v">TF-IDF or Sentence-Transformers</span><span class="s">embed_cache.py</span></div>
-        <div class="vflow-node"><span class="k">Artifact</span><span class="v">Dense document matrix</span><span class="s">review_embeddings.npy</span></div>
-      </div>
-    </div>
-
-    {_join("parallel analysis passes")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">05</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Model</div>
-          <div class="vflow-title">Unsupervised + supervised NLP</div>
-          <div class="vflow-tech">Discover themes, score affect, and cluster behavioral segments</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Theme discovery</span><span class="v">BERTopic · {c["themes"]:,} topics</span><span class="s">output/themes.csv</span></div>
-        <div class="vflow-node"><span class="k">Sentiment</span><span class="v">RoBERTa 3-class · {c["sentiment"]:,}</span><span class="s">output/sentiment.csv</span></div>
-        <div class="vflow-node"><span class="k">Segments</span><span class="v">KMeans k=4 · {c["segments"]:,}</span><span class="s">Routine · Explorers · Price · Impulse</span></div>
-      </div>
-    </div>
-
-    {_join("relevance filter · barrier taxonomy")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">06</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Label</div>
-          <div class="vflow-title">Exploration tagging</div>
-          <div class="vflow-tech">Classify each item for category-exploration signal and friction</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Relevance</span><span class="v">{c["exploration_relevant"]:,} relevant / {c["exploration"]:,}</span><span class="s">is_relevant + reason</span></div>
-        <div class="vflow-node"><span class="k">Signals</span><span class="v">stuck · blocked · explored · noise</span><span class="s">exploration_signal</span></div>
-        <div class="vflow-node"><span class="k">Barriers</span><span class="v">Multi-label friction tags</span><span class="s">analysis/exploration.py</span></div>
-      </div>
-    </div>
-
-    {_join("count-grounded synthesis · optional LLM polish")}
-
-    <div class="vflow-step">
-      <div class="vflow-head">
-        <div class="vflow-num">07</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Synthesize</div>
-          <div class="vflow-title">Research synthesis engine</div>
-          <div class="vflow-tech">Turn tagged evidence into JTBD, unmet needs, hypotheses, and experiments</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Product synthesis</span><span class="v">Barriers · JTBD · unmet needs</span><span class="s">output/synthesis.json</span></div>
-        <div class="vflow-node"><span class="k">Category opportunities</span><span class="v">{c["category_ops"]:,} ranked bets</span><span class="s">opportunity_score</span></div>
-        <div class="vflow-node"><span class="k">Test plan</span><span class="v">Hypotheses + experiments</span><span class="s">metric · guardrail · sample</span></div>
-        <div class="vflow-node"><span class="k">Legacy RQ board</span><span class="v">{c["insights"]:,} insight cards</span><span class="s">output/insights.json</span></div>
-      </div>
-    </div>
-
-    {_join("read-only presentation layer")}
-
-    <div class="vflow-step vflow-terminal">
-      <div class="vflow-head">
-        <div class="vflow-num">08</div>
-        <div class="vflow-titles">
-          <div class="vflow-phase">Present</div>
-          <div class="vflow-title">Decision surfaces</div>
-          <div class="vflow-tech">Streamlit research IA — no live scrape on page load</div>
-        </div>
-      </div>
-      <div class="vflow-body">
-        <div class="vflow-node"><span class="k">Findings Board</span><span class="v">Exec summary · barriers · JTBD</span><span class="s">synthesis consumer</span></div>
-        <div class="vflow-node"><span class="k">Category Opportunities</span><span class="v">Ranked expansion bets</span><span class="s">opportunity backlog</span></div>
-        <div class="vflow-node"><span class="k">Validation · Live · Try-it</span><span class="v">Evidence checks + pipeline status</span><span class="s">quality + ops</span></div>
-        <div class="vflow-node"><span class="k">Quality gates</span><span class="v">{c["gold"]:,} gold labels · schema checks</span><span class="s">eval harness</span></div>
-      </div>
-    </div>
-
-  </div>
-  <div class="flow-note">
-    Refresh artifacts: <code>python main.py --skip-collect</code>
-    · Tag: <code>python -m analysis.exploration</code>
-    · Synthesize: <code>python -m llm.synthesis --no-polish</code>
-  </div>
-</div>
-        """,
+        f'<div class="flow-wrap"><pre class="ascii-flow">{html.escape(diagram)}</pre></div>',
         unsafe_allow_html=True,
     )
     panel_end()
