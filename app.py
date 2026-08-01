@@ -1710,6 +1710,128 @@ def render_end_to_end_workflow() -> None:
     panel_end()
 
 
+def render_ai_pipeline_architecture() -> None:
+    """Technical AI pipeline architecture from collection through decision surfaces."""
+    c = _workflow_counts()
+
+    def chip(k: str, v: str) -> str:
+        return (
+            f'<div class="ai-arch-chip"><span class="k">{html.escape(k)}</span>'
+            f'<span class="v">{html.escape(v)}</span></div>'
+        )
+
+    def stage(lane: str, title: str, desc: str, chips: list[tuple[str, str]]) -> str:
+        grid = "".join(chip(k, v) for k, v in chips)
+        return f"""
+<div class="ai-arch-stage">
+  <div class="lane">{html.escape(lane)}</div>
+  <div class="title">{html.escape(title)}</div>
+  <p class="desc">{html.escape(desc)}</p>
+  <div class="ai-arch-grid">{grid}</div>
+</div>"""
+
+    join = '<div class="ai-arch-join">↓</div>'
+
+    block = f"""
+<div class="ai-arch">
+  {stage(
+      "01 · Ingestion",
+      "Multi-source data collection",
+      "Customer feedback is pulled from storefronts and communities into raw files.",
+      [
+          ("Google Play", f"{c['play_raw']:,} reviews"),
+          ("Apple App Store", f"{c['app_store_raw']:,} reviews"),
+          ("Reddit", f"{c['reddit_raw']:,} posts"),
+          ("YouTube", f"{c['youtube_raw']:,} comments"),
+      ],
+  )}
+  {join}
+  {stage(
+      "02 · Corpus engineering",
+      "Merge, normalize & clean",
+      "Sources are unified to a common schema, deduplicated, and prepared for NLP.",
+      [
+          ("Unified corpus", f"{c['merged']:,} items"),
+          ("Cleaned text", f"{c['cleaned']:,} docs"),
+          ("Schema", "id · source · date · rating · text"),
+          ("Module", "discovery_engine/corpus/merge.py"),
+      ],
+  )}
+  {join}
+  {stage(
+      "03 · Representation learning",
+      "Document embeddings",
+      "Each review is turned into a numeric vector so similar feedback can be clustered.",
+      [
+          ("Backend", "TF-IDF or Sentence-Transformers"),
+          ("Artifact", "review_embeddings.npy"),
+          ("Cache", "embed_cache.py"),
+          ("Orchestrator", "main.py"),
+      ],
+  )}
+  {join}
+  {stage(
+      "04 · AI analysis layer",
+      "Themes · sentiment · segments",
+      "Unsupervised and supervised models extract structure from the feedback corpus.",
+      [
+          ("Theme discovery", f"BERTopic · {c['themes']:,} themes"),
+          ("Sentiment", f"RoBERTa 3-class · {c['sentiment']:,}"),
+          ("Segments", f"KMeans k=4 · {c['segments']:,}"),
+          ("Outputs", "themes / sentiment / segments CSV"),
+      ],
+  )}
+  {join}
+  {stage(
+      "05 · Exploration intelligence",
+      "Barrier & signal tagging",
+      "Reviews are labeled for category-exploration relevance, barriers, and funnel signals.",
+      [
+          ("Tagger", "analysis/exploration.py"),
+          ("Relevant", f"{c['exploration_relevant']:,} of {c['exploration']:,}"),
+          ("Signals", "stuck · blocked · explored · noise"),
+          ("Artifact", "exploration_tags.csv"),
+      ],
+  )}
+  {join}
+  {stage(
+      "06 · Research synthesis",
+      "Deterministic counts + optional LLM polish",
+      "Evidence is rolled up into JTBD, unmet needs, hypotheses, experiments, and category bets.",
+      [
+          ("Python layer", "barrier % · opportunity rank"),
+          ("LLM layer", "summary & narrative polish"),
+          ("Opportunities", f"{c['category_ops']:,} categories"),
+          ("Artifact", "synthesis.json · insights.json"),
+      ],
+  )}
+  {join}
+  {stage(
+      "07 · Decision surfaces",
+      "Streamlit discovery dashboard",
+      "Pre-computed artifacts power Findings, Opportunities, Validation, Live, and Try-it views.",
+      [
+          ("Findings Board", "exec summary · JTBD · experiments"),
+          ("Category Opportunities", "ranked expansion bets"),
+          ("Validation Desk", "hypothesis triangulation"),
+          ("Runtime", "read-only · no live scrape"),
+      ],
+  )}
+</div>
+"""
+
+    panel_start(
+        "AI-Powered User Feedback Discovery Engine – Pipeline Architecture",
+        "End-to-end technical path from multi-source collection to product decisions.",
+    )
+    st.markdown(block, unsafe_allow_html=True)
+    st.caption(
+        "Primary question throughout: **Why don’t Blinkit users explore new categories?** "
+        "Refresh artifacts with `python main.py --skip-collect`, then use **Refresh data** in the sidebar."
+    )
+    panel_end()
+
+
 def render_methodology() -> None:
     """Explain data workflow, theme mining, insight generation, and validation."""
     page_header(
@@ -1718,6 +1840,7 @@ def render_methodology() -> None:
     )
 
     render_end_to_end_workflow()
+    render_ai_pipeline_architecture()
 
     panel_start(
         "1. How your workflow gathers and analyzes data",
