@@ -184,6 +184,44 @@ def load_insights() -> dict:
     return payload
 
 
+@st.cache_data(show_spinner=False)
+def load_synthesis() -> dict:
+    path = OUTPUT / "synthesis.json"
+    if not path.exists():
+        return {}
+    try:
+        with path.open(encoding="utf-8") as f:
+            payload = json.load(f)
+        return payload if isinstance(payload, dict) else {}
+    except Exception as exc:  # noqa: BLE001
+        st.warning(f"Could not read synthesis.json: {exc}")
+        return {}
+
+
+@st.cache_data(show_spinner=False)
+def load_exploration() -> pd.DataFrame:
+    path = OUTPUT / "exploration_tags.csv"
+    if not path.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception as exc:  # noqa: BLE001
+        st.warning(f"Could not read exploration_tags.csv: {exc}")
+        return pd.DataFrame()
+
+
+@st.cache_data(show_spinner=False)
+def load_merged() -> pd.DataFrame:
+    path = DATA_PROC / "merged_reviews.csv"
+    if not path.exists():
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(path)
+    except Exception as exc:  # noqa: BLE001
+        st.warning(f"Could not read merged_reviews.csv: {exc}")
+        return pd.DataFrame()
+
+
 def _theme_display_name(row: pd.Series) -> str:
     raw = str(row.get("Theme name", "") or "").strip()
     keywords = str(row.get("Representative keywords", "") or "")
