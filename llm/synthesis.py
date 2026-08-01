@@ -347,7 +347,7 @@ def build_synthesis_from_corpus(
 
 def _llm_polish(synthesis: dict[str, Any]) -> dict[str, Any]:
     """Optional short LLM rewrite of executive_summary only."""
-    load_dotenv()
+    load_env()
     api_key = os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY")
     if not api_key:
         synthesis["llm_polish"] = False
