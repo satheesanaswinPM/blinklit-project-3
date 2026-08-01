@@ -386,10 +386,11 @@ def confidence_bar(sentiment: pd.DataFrame) -> go.Figure:
 
 def inject_styles() -> None:
     tok = theme_tokens()
-    dark_class = "theme-dark" if is_dark() else "theme-light"
+    mode = "dark" if is_dark() else "light"
     st.markdown(
         f"""
-        <style>
+        <style data-discovery-theme="{mode}">
+          /* theme:{mode} */
           @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap');
 
           :root {{
@@ -413,21 +414,83 @@ def inject_styles() -> None:
             background:
               radial-gradient(900px 420px at 0% -10%, {"rgba(50,213,131,0.12)" if is_dark() else "rgba(3,152,85,0.10)"} 0%, transparent 55%),
               radial-gradient(700px 360px at 100% 0%, {"rgba(46,144,250,0.10)" if is_dark() else "rgba(46,144,250,0.08)"} 0%, transparent 50%),
-              var(--bg);
-            color: var(--ink);
+              var(--bg) !important;
+            color: var(--ink) !important;
+            /* Override Streamlit theme tokens so light mode stays readable after dark */
+            --text-color: {tok["ink"]} !important;
+            --secondary-text-color: {tok["muted"]} !important;
+            --text-color-strong: {tok["ink"]} !important;
+            --background-color: {tok["bg"]} !important;
+            --secondary-background-color: {tok["panel"]} !important;
+          }}
+
+          /* Main pane text (do not inherit sidebar white text) */
+          [data-testid="stAppViewContainer"] {{
+            color: {tok["ink"]} !important;
+            background: transparent !important;
+          }}
+          [data-testid="stAppViewContainer"] p,
+          [data-testid="stAppViewContainer"] li,
+          [data-testid="stAppViewContainer"] span,
+          [data-testid="stAppViewContainer"] label,
+          [data-testid="stAppViewContainer"] h1,
+          [data-testid="stAppViewContainer"] h2,
+          [data-testid="stAppViewContainer"] h3,
+          [data-testid="stAppViewContainer"] h4,
+          [data-testid="stMarkdownContainer"],
+          [data-testid="stMarkdownContainer"] p,
+          [data-testid="stMarkdownContainer"] span,
+          [data-testid="stCaptionContainer"],
+          [data-testid="stCaptionContainer"] p,
+          [data-testid="stWidgetLabel"] p,
+          [data-testid="stWidgetLabel"] label,
+          .stMarkdown, .stCaption, .stText,
+          div[data-baseweb="input"] input,
+          div[data-baseweb="textarea"] textarea,
+          div[data-baseweb="select"] > div,
+          [data-testid="stSelectbox"] div,
+          [data-testid="stMultiSelect"] div,
+          [data-testid="stTextInput"] input,
+          [data-testid="stNumberInput"] input {{
+            color: {tok["ink"]} !important;
+          }}
+          [data-testid="stCaptionContainer"],
+          [data-testid="stCaptionContainer"] p {{
+            color: {tok["muted"]} !important;
+          }}
+          div[data-baseweb="input"] input,
+          div[data-baseweb="textarea"] textarea,
+          [data-testid="stTextInput"] input {{
+            background-color: {tok["panel"]} !important;
+            -webkit-text-fill-color: {tok["ink"]} !important;
+          }}
+          [data-testid="stDataFrame"] * {{
+            color: {tok["ink"]} !important;
+          }}
+          div[data-testid="stDownloadButton"] button,
+          div[data-testid="stButton"] button {{
+            color: {tok["ink"]} !important;
+            background-color: {tok["panel"]} !important;
           }}
 
           [data-testid="stSidebar"] {{
-            background: linear-gradient(180deg, {tok["sidebar_top"]} 0%, {tok["sidebar_mid"]} 50%, {tok["sidebar_bot"]} 100%);
+            background: linear-gradient(180deg, {tok["sidebar_top"]} 0%, {tok["sidebar_mid"]} 50%, {tok["sidebar_bot"]} 100%) !important;
             border-right: 1px solid rgba(255,255,255,0.06);
           }}
-          [data-testid="stSidebar"] * {{ color: #F5F7FA !important; }}
+          [data-testid="stSidebar"],
+          [data-testid="stSidebar"] p,
+          [data-testid="stSidebar"] span,
+          [data-testid="stSidebar"] label,
+          [data-testid="stSidebar"] .stMarkdown {{
+            color: #F5F7FA !important;
+          }}
           [data-testid="stSidebar"] .stRadio label {{
             padding: 0.62rem 0.8rem;
             border-radius: 12px;
             margin-bottom: 0.18rem;
             border: 1px solid transparent;
             transition: background 160ms ease, border-color 160ms ease;
+            color: #F5F7FA !important;
           }}
           [data-testid="stSidebar"] .stRadio label:hover {{
             background: rgba(255,255,255,0.06);
@@ -437,6 +500,16 @@ def inject_styles() -> None:
           [data-testid="stSidebar"] label:has(input:checked) {{
             background: rgba(50,213,131,0.16) !important;
             border-color: rgba(50,213,131,0.35) !important;
+          }}
+          [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
+          [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {{
+            color: #D0D5DD !important;
+          }}
+          [data-testid="stSidebar"] div[data-testid="stDownloadButton"] button,
+          [data-testid="stSidebar"] div[data-testid="stButton"] button {{
+            color: #F5F7FA !important;
+            background-color: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.18) !important;
           }}
 
           h1, h2, h3, .hero-title, .insight-title, .metric-value {{
@@ -465,11 +538,11 @@ def inject_styles() -> None:
             font-weight: 700;
             line-height: 1.12;
             margin: 0 0 0.4rem 0;
-            color: var(--ink);
+            color: {tok["ink"]} !important;
             animation: fadeRise 420ms ease both;
           }}
           .hero-sub {{
-            color: var(--muted);
+            color: {tok["muted"]} !important;
             font-size: 1rem;
             line-height: 1.55;
             margin-bottom: 1.25rem;
@@ -507,36 +580,37 @@ def inject_styles() -> None:
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: {tok["muted"]} !important;
             margin-bottom: 0.45rem;
           }}
           .metric-value {{
             font-size: 2.05rem;
             font-weight: 700;
             line-height: 1;
-            color: var(--ink);
+            color: {tok["ink"]} !important;
             font-variant-numeric: tabular-nums;
           }}
           .metric-value[data-count] {{
             animation: countPulse 700ms ease;
           }}
-          .metric-hint {{ margin-top: 0.45rem; font-size: 0.82rem; color: var(--muted); }}
+          .metric-hint {{ margin-top: 0.45rem; font-size: 0.82rem; color: {tok["muted"]} !important; }}
 
           .panel {{
-            background: var(--panel);
-            border: 1px solid var(--line);
+            background: {tok["panel"]} !important;
+            border: 1px solid {tok["line"]} !important;
             border-radius: 18px;
             padding: 1.15rem 1.25rem 1.05rem;
             margin-bottom: 1rem;
             box-shadow: var(--shadow);
             animation: fadeRise 560ms ease both;
+            color: {tok["ink"]} !important;
           }}
           .panel h3 {{
             margin: 0 0 0.28rem 0 !important;
             font-size: 1.05rem !important;
-            color: var(--ink) !important;
+            color: {tok["ink"]} !important;
           }}
-          .panel-sub {{ color: var(--muted); font-size: 0.9rem; margin-bottom: 0.85rem; }}
+          .panel-sub {{ color: {tok["muted"]} !important; font-size: 0.9rem; margin-bottom: 0.85rem; }}
 
           .toolbar {{
             display: flex;
@@ -547,14 +621,15 @@ def inject_styles() -> None:
           }}
 
           .insight-card {{
-            background: var(--panel);
-            border: 1px solid var(--line);
+            background: {tok["panel"]} !important;
+            border: 1px solid {tok["line"]} !important;
             border-left: 4px solid var(--accent);
             border-radius: 16px;
             padding: 1.05rem 1.2rem;
             margin-bottom: 0.85rem;
             box-shadow: var(--shadow);
             animation: fadeRise 500ms ease both;
+            color: {tok["ink"]} !important;
           }}
           .insight-card.priority-high {{ border-left-color: var(--danger); }}
           .insight-card.priority-medium {{ border-left-color: var(--warn); }}
@@ -563,7 +638,7 @@ def inject_styles() -> None:
             font-size: 1.08rem;
             font-weight: 700;
             margin: 0.25rem 0 0.45rem 0;
-            color: var(--ink);
+            color: {tok["ink"]} !important;
           }}
           .badge {{
             display: inline-block;
@@ -574,20 +649,20 @@ def inject_styles() -> None:
             padding: 0.2rem 0.55rem;
             border-radius: 999px;
             background: {"#1D2939" if is_dark() else "#F2F4F7"};
-            color: {"#D0D5DD" if is_dark() else "#344054"};
+            color: {"#D0D5DD" if is_dark() else "#344054"} !important;
           }}
-          .badge.high {{ background: {"#3B1219" if is_dark() else "#FEE4E2"}; color: {"#FDA29B" if is_dark() else "#B42318"}; }}
-          .badge.medium {{ background: {"#3B2A0E" if is_dark() else "#FEF0C7"}; color: {"#FEC84B" if is_dark() else "#B54708"}; }}
-          .badge.low {{ background: {"#102A56" if is_dark() else "#D1E9FF"}; color: {"#84CAFF" if is_dark() else "#175CD3"}; }}
+          .badge.high {{ background: {"#3B1219" if is_dark() else "#FEE4E2"}; color: {"#FDA29B" if is_dark() else "#B42318"} !important; }}
+          .badge.medium {{ background: {"#3B2A0E" if is_dark() else "#FEF0C7"}; color: {"#FEC84B" if is_dark() else "#B54708"} !important; }}
+          .badge.low {{ background: {"#102A56" if is_dark() else "#D1E9FF"}; color: {"#84CAFF" if is_dark() else "#175CD3"} !important; }}
           .field-label {{
             font-size: 0.72rem;
             font-weight: 800;
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: {tok["muted"]} !important;
             margin-top: 0.55rem;
           }}
-          .field-body {{ color: var(--ink); font-size: 0.94rem; line-height: 1.5; }}
+          .field-body {{ color: {tok["ink"]} !important; font-size: 0.94rem; line-height: 1.5; }}
 
           div[data-testid="stDataFrame"] {{
             border: 1px solid var(--line);
@@ -636,7 +711,6 @@ def inject_styles() -> None:
 
           /* Streamlit chrome */
           header[data-testid="stHeader"] {{ background: transparent; }}
-          .{dark_class} {{ }}
         </style>
         """,
         unsafe_allow_html=True,

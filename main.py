@@ -195,8 +195,14 @@ def stage_collect_reddit(ctx: PipelineContext) -> Path | None:
 
 
 def stage_clean_data(ctx: PipelineContext) -> Path:
-    """Dedupe + preprocess Play (and optional Reddit) into a cleaned corpus."""
-    from discovery_engine.nlp.preprocess import normalize_for_dedupe, preprocess_text
+    """Light-clean Play (and optional Reddit) into a cleaned corpus.
+
+    Uses soft exact-text dedupe (whitespace + case fold only) so short
+    near-duplicate reviews like "Good" / "good!!" are not over-collapsed.
+    Keeps rows even when NLP preprocess empties emoji-only text by falling
+    back to a light normalized raw string for embeddings.
+    """
+    from discovery_engine.nlp.preprocess import preprocess_text
 
     if not PLAY_CSV.exists():
         raise FileNotFoundError(f"Play reviews not found: {PLAY_CSV}")
@@ -229,24 +235,31 @@ def stage_clean_data(ctx: PipelineContext) -> Path:
     df = pd.concat(frames, ignore_index=True, sort=False)
     texts = df["raw_text"].fillna("").astype(str).tolist()
 
+    # Soft dedupe: only drop empty / exact same text after casefold+whitespace
     seen: set[str] = set()
     keep_idx: list[int] = []
     for i, t in enumerate(texts):
-        key = normalize_for_dedupe(t)
+        key = " ".join(t.casefold().split())
         if not key or key in seen:
             continue
         seen.add(key)
         keep_idx.append(i)
     df = df.iloc[keep_idx].reset_index(drop=True)
     texts = [texts[i] for i in keep_idx]
-    print(f"Deduped: kept {len(df)} rows")
+    print(f"Soft-deduped: kept {len(df)} rows")
 
     print("Cleaning / normalizing text...")
-    cleaned = [preprocess_text(t) for t in texts]
-    df["cleaned_text"] = cleaned
+    cleaned_rows: list[str] = []
+    for t in texts:
+        cleaned = str(preprocess_text(t) or "").strip()
+        if not cleaned:
+            # Keep emoji/short reviews in the corpus for sentiment/volume
+            cleaned = " ".join(t.casefold().split())
+        cleaned_rows.append(cleaned)
+    df["cleaned_text"] = cleaned_rows
     df["Review"] = df["raw_text"].astype(str)
 
-    mask = df["cleaned_text"].astype(str).str.len() > 0
+    mask = df["Review"].astype(str).str.strip().str.len() > 0
     dropped = int((~mask).sum())
     df = df.loc[mask].reset_index(drop=True)
     print(f"Cleaned: {len(df)} rows (dropped {dropped} empty)")
@@ -341,7 +354,8 @@ def stage_detect_themes(ctx: PipelineContext) -> Path:
     save_themes(themes, THEMES_CSV)
     print(f"Detected {len(themes)} themes -> {THEMES_CSV}")
     for _, row in themes.head(8).iterrows():
-        print(f"  - {row['Theme name']} (n={row['Number of reviews']})")
+        name = str(row["Theme name"]).encode("ascii", errors="replace").decode("ascii")
+        print(f"  - {name} (n={row['Number of reviews']})")
     return THEMES_CSV
 
 
