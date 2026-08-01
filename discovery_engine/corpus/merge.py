@@ -2,10 +2,11 @@
 Merge multi-source feedback into a unified corpus for exploration analysis.
 
 Sources (when present):
-  - data/raw/blinkit_play_reviews.csv
-  - data/raw/app_store_reviews.csv
-  - data/raw/reddit_posts.csv / reddit_feedback.csv
-  - data/raw/youtube_comments.csv
+  - Google Play (blinkit_play_reviews.csv, play_store_feedback.csv)
+  - App Store (app_store_reviews.csv, app_store_feedback.csv)
+  - Reddit (reddit_posts.csv, reddit_feedback.csv)
+  - YouTube (youtube_comments.csv)
+  - Adjacent channels (social / forum / nps / product_review / sample)
 
 Output:
   data/processed/merged_reviews.csv
@@ -40,20 +41,20 @@ def _hash_id(source: str, text: str) -> str:
 def _from_play(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     rows = []
-    for i, r in df.iterrows():
-        text = str(r.get("Review") or "").strip()
+    for _, r in df.iterrows():
+        text = str(r.get("Review") or r.get("text") or "").strip()
         if not text:
             continue
         rows.append(
             {
-                "id": _hash_id("play_store", text),
+                "id": str(r.get("id") or "").strip() or _hash_id("play_store", text),
                 "source": "play_store",
-                "date": str(r.get("Date") or ""),
-                "rating": r.get("Rating", ""),
+                "date": str(r.get("Date") or r.get("date") or r.get("created_at") or ""),
+                "rating": r.get("Rating", r.get("rating", "")),
                 "text": text,
-                "author": "",
-                "url": "",
-                "scraped_at": _now(),
+                "author": str(r.get("author") or ""),
+                "url": str(r.get("url") or ""),
+                "scraped_at": str(r.get("scraped_at") or _now()),
             }
         )
     return pd.DataFrame(rows)
@@ -79,7 +80,7 @@ def _from_unified(path: Path, default_source: str) -> pd.DataFrame:
             {
                 "id": rid,
                 "source": source,
-                "date": str(r.get("date") or r.get("Date") or r.get("Created") or ""),
+                "date": str(r.get("date") or r.get("Date") or r.get("Created") or r.get("created_at") or ""),
                 "rating": r.get("rating", r.get("Rating", "")),
                 "text": text,
                 "author": str(r.get("author") or r.get("Author") or ""),
@@ -96,27 +97,52 @@ def merge_sources(
     app_store_path: Path | None = None,
     reddit_path: Path | None = None,
     youtube_path: Path | None = None,
+    include_seed_channels: bool = True,
 ) -> pd.DataFrame:
     frames: list[pd.DataFrame] = []
-    play_path = play_path or (RAW / "blinkit_play_reviews.csv")
-    app_store_path = app_store_path or (RAW / "app_store_reviews.csv")
-    youtube_path = youtube_path or (RAW / "youtube_comments.csv")
+
+    play_candidates = [
+        play_path,
+        RAW / "blinkit_play_reviews.csv",
+        RAW / "play_store_feedback.csv",
+    ]
+    for p in play_candidates:
+        if p is not None and Path(p).exists():
+            frames.append(_from_play(Path(p)))
+
+    app_candidates = [
+        app_store_path,
+        RAW / "app_store_reviews.csv",
+        RAW / "app_store_feedback.csv",
+    ]
+    for p in app_candidates:
+        if p is not None and Path(p).exists():
+            frames.append(_from_unified(Path(p), "app_store"))
+
+    yt = youtube_path or (RAW / "youtube_comments.csv")
+    if Path(yt).exists():
+        frames.append(_from_unified(Path(yt), "youtube"))
+
     reddit_candidates = [
         reddit_path,
         RAW / "reddit_posts.csv",
         RAW / "reddit_feedback.csv",
     ]
-
-    if play_path.exists():
-        frames.append(_from_play(play_path))
-    if app_store_path.exists():
-        frames.append(_from_unified(app_store_path, "app_store"))
-    if youtube_path.exists():
-        frames.append(_from_unified(youtube_path, "youtube"))
     for rp in reddit_candidates:
         if rp is not None and Path(rp).exists():
             frames.append(_from_unified(Path(rp), "reddit"))
-            break
+
+    if include_seed_channels:
+        extras = [
+            ("social", RAW / "social_feedback.csv"),
+            ("forum", RAW / "forum_feedback.csv"),
+            ("nps", RAW / "nps_feedback.csv"),
+            ("product_review", RAW / "product_review_feedback.csv"),
+            ("sample", RAW / "sample_feedback.csv"),
+        ]
+        for src, path in extras:
+            if path.exists():
+                frames.append(_from_unified(path, src))
 
     if not frames:
         return pd.DataFrame(columns=UNIFIED_COLS)
@@ -124,7 +150,6 @@ def merge_sources(
     df = pd.concat(frames, ignore_index=True)
     df["text"] = df["text"].astype(str).str.strip()
     df = df[df["text"].str.len() > 0]
-    # Soft exact dedupe across sources
     key = df["text"].str.casefold().str.replace(r"\s+", " ", regex=True)
     df = df.loc[~key.duplicated()].reset_index(drop=True)
     return df[UNIFIED_COLS]
