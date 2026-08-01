@@ -1379,12 +1379,195 @@ def render_opportunities(insights_payload: dict) -> None:
         )
 
 
+def _workflow_counts() -> dict[str, int]:
+    """Live artifact counts for the methodology workflow diagram."""
+    counts = {
+        "play_raw": 0,
+        "reddit_raw": 0,
+        "cleaned": 0,
+        "sentiment": 0,
+        "themes": 0,
+        "segments": 0,
+        "insights": 0,
+        "gold": 0,
+    }
+    play = ROOT / "data" / "raw" / "blinkit_play_reviews.csv"
+    reddit = ROOT / "data" / "raw" / "reddit_posts.csv"
+    cleaned = ROOT / "data" / "processed" / "preprocessed_reviews.csv"
+    gold = ROOT / "data" / "gold" / "gold_labels.jsonl"
+    try:
+        if play.exists():
+            counts["play_raw"] = len(pd.read_csv(play))
+        if reddit.exists():
+            counts["reddit_raw"] = len(pd.read_csv(reddit))
+        if cleaned.exists():
+            counts["cleaned"] = len(pd.read_csv(cleaned))
+        if (OUTPUT / "sentiment.csv").exists():
+            counts["sentiment"] = len(pd.read_csv(OUTPUT / "sentiment.csv"))
+        if (OUTPUT / "themes.csv").exists():
+            counts["themes"] = len(pd.read_csv(OUTPUT / "themes.csv"))
+        if (OUTPUT / "user_segments.csv").exists():
+            counts["segments"] = len(pd.read_csv(OUTPUT / "user_segments.csv"))
+        if (OUTPUT / "insights.json").exists():
+            payload = json.loads((OUTPUT / "insights.json").read_text(encoding="utf-8"))
+            counts["insights"] = len(payload.get("insights") or [])
+        if gold.exists():
+            counts["gold"] = sum(1 for _ in gold.open(encoding="utf-8") if _.strip())
+    except Exception:
+        pass
+    return counts
+
+
+def render_end_to_end_workflow() -> None:
+    """Layered end-to-end workflow diagram (collect → analyze → dashboard)."""
+    c = _workflow_counts()
+    panel_start(
+        "End-to-end workflow",
+        "Layered path from multi-source collection through analysis to the Streamlit dashboard.",
+    )
+    st.markdown(
+        f"""
+<div class="flow-wrap">
+  <div class="flow-layer">
+    <h4>Layer 1 · Multi-source collectors  (scripts/)</h4>
+    <div class="flow-grid">
+      <div class="flow-card">
+        <strong>Google Play</strong>
+        <span>google-play-scraper → <code>data/raw/blinkit_play_reviews.csv</code></span>
+        <div><span class="flow-pill">{c["play_raw"]:,} reviews</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Reddit (optional)</strong>
+        <span>PRAW → <code>data/raw/reddit_posts.csv</code></span>
+        <div><span class="flow-pill">{c["reddit_raw"]:,} posts</span>
+        <span class="flow-pill">skipped if no REDDIT_* creds</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Seed / fixture CSVs</strong>
+        <span>Play / Reddit / NPS / forum samples under <code>data/raw/</code></span>
+        <div><span class="flow-pill">Phase 1 SQLite ingest</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Excluded / not in MVP</strong>
+        <span>Trustpilot · MouthShut · LinkedIn · X · TikTok (bot walls / JS / ToS)</span>
+      </div>
+    </div>
+    <div class="flow-note">Item-level soft-dedupe · non-empty text filter · pagination via Play continuation tokens</div>
+  </div>
+
+  <div class="flow-arrow">▼ merge + clean  ·  main.py stage 3</div>
+
+  <div class="flow-layer">
+    <h4>Normalize · soft-dedupe · preprocess</h4>
+    <div class="flow-grid">
+      <div class="flow-card">
+        <strong>Merged clean corpus</strong>
+        <span><code>data/processed/preprocessed_reviews.csv</code></span>
+        <div><span class="flow-pill">{c["cleaned"]:,} items</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Schema fields</strong>
+        <span>Review · cleaned_text · source · Rating/Date when present · scraped provenance</span>
+      </div>
+      <div class="flow-card">
+        <strong>Embeddings cache</strong>
+        <span>TF-IDF (default) / ST → <code>data/processed/review_embeddings.npy</code></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">▼</div>
+
+  <div class="flow-layer">
+    <h4>Layer 2 · Multi-pass analysis  (analysis/ + llm/)</h4>
+    <div class="flow-pass">
+      <div class="flow-card">
+        <strong>Pass A · Themes</strong>
+        <span><code>analysis/themes.py</code> · BERTopic on embeddings</span>
+        <div><span class="flow-pill">{c["themes"]:,} themes</span>
+        <span class="flow-pill">output/themes.csv</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Pass B · Sentiment</strong>
+        <span><code>analysis/sentiment.py</code> · HF 3-class pipeline</span>
+        <div><span class="flow-pill">{c["sentiment"]:,} labeled</span>
+        <span class="flow-pill">output/sentiment.csv</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Pass C · Segments</strong>
+        <span><code>analysis/segments.py</code> · KMeans k=4 + prototypes</span>
+        <div><span class="flow-pill">{c["segments"]:,} assigned</span>
+        <span class="flow-pill">Routine · Explorers · Price · Impulse</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Pass D · Insights</strong>
+        <span><code>llm/insights.py</code> · LLM + grounded fallback</span>
+        <div><span class="flow-pill">{c["insights"]:,} insights</span>
+        <span class="flow-pill">7 research questions</span></div>
+      </div>
+    </div>
+    <div class="flow-note" style="margin-top:0.75rem">
+      <strong style="color:inherit">Deterministic (Python)</strong> — theme sizes, sentiment mix, segment counts, opportunity ranking<br/>
+      <strong style="color:inherit">LLM (language)</strong> — titles, evidence narrative, business impact, recommendations (schema-validated)
+    </div>
+    <div class="flow-grid" style="margin-top:0.65rem">
+      <div class="flow-card">
+        <strong>Validate</strong>
+        <span>Gold set · metrics · schema checks</span>
+        <div><span class="flow-pill">{c["gold"]:,} gold rows</span>
+        <span class="flow-pill">docs/METRICS.md</span>
+        <span class="flow-pill">scripts/validate_gold · run_eval</span></div>
+      </div>
+      <div class="flow-card">
+        <strong>Export artifacts</strong>
+        <span><code>output/themes.csv</code> · <code>sentiment.csv</code> · <code>user_segments.csv</code> · <code>insights.json</code></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-arrow">▼</div>
+
+  <div class="flow-layer">
+    <h4>Layer 3 · Streamlit dashboard  (app.py)  — reads pre-computed files</h4>
+    <div class="flow-grid">
+      <div class="flow-card">
+        <strong>Overview</strong>
+        <span>KPIs · sentiment mix · theme frequency</span>
+      </div>
+      <div class="flow-card">
+        <strong>Top Themes / Sentiment / Segments</strong>
+        <span>Interactive Plotly charts · search · filters · CSV download</span>
+      </div>
+      <div class="flow-card">
+        <strong>Product Insights · Opportunity Ranking</strong>
+        <span>Priority backlog from synthesis</span>
+      </div>
+      <div class="flow-card">
+        <strong>Methodology (this page)</strong>
+        <span>Workflow · theme ID · insight gen · validation</span>
+      </div>
+    </div>
+    <div class="flow-note">
+      Live tabs read <code>output/*</code> only — no scrape on page load.
+      Full refresh: <code>python main.py</code> then reload dashboard.
+      Optional API Theme Explorer: <code>uvicorn discovery_engine.api:app</code> + <code>frontend/</code>.
+    </div>
+  </div>
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+    panel_end()
+
+
 def render_methodology() -> None:
     """Explain data workflow, theme mining, insight generation, and validation."""
     page_header(
         "Methodology",
         "How Discovery Insight Engine gathers feedback, finds themes, generates product insights, and checks quality.",
     )
+
+    render_end_to_end_workflow()
 
     panel_start(
         "1. How your workflow gathers and analyzes data",
