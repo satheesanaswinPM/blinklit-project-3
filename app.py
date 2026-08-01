@@ -1624,7 +1624,7 @@ def render_methodology() -> None:
     """Explain data workflow, theme mining, insight generation, and validation."""
     page_header(
         "Methodology",
-        "How Discovery Insight Engine gathers feedback, finds themes, generates product insights, and checks quality.",
+        "How we answer why users don’t explore new categories — multi-source corpus → tags → synthesis.",
     )
 
     render_end_to_end_workflow()
