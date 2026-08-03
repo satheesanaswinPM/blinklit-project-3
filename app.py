@@ -3312,6 +3312,7 @@ def render_prototype_lab() -> None:
             st.session_state.proto_home_status = "browsing"
             st.session_state.proto_home_views = 1
             st.session_state.proto_home_buys = 0
+            log_event("mvp_action", mvp="home_guarantee", action="reset_demo")
             st.rerun()
 
         panel_start("Home product page", home_product["why"])
