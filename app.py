@@ -2978,6 +2978,39 @@ def render_prototype_lab() -> None:
             unsafe_allow_html=True,
         )
 
+        render_product_trust_panel(
+            product_name=home_product["name"],
+            keywords=["detergent", "surf", "cleaning", "laundry", "home", "matic"],
+            fallback_comments=[
+                {
+                    "rating": 5,
+                    "text": "Detergent worked great and pack was sealed. Felt safe for a first Home buy on the app.",
+                    "source": "demo",
+                },
+                {
+                    "rating": 5,
+                    "text": "Quality matched what I buy offline. Delivery was on time.",
+                    "source": "demo",
+                },
+                {
+                    "rating": 4,
+                    "text": "Good product. The easy-return promise made me try Home for the first time.",
+                    "source": "demo",
+                },
+                {
+                    "rating": 4,
+                    "text": "No leakage, genuine pack. Would buy cleaning essentials here again.",
+                    "source": "demo",
+                },
+                {
+                    "rating": 3,
+                    "text": "Product is fine; I was nervous about quality but reviews helped.",
+                    "source": "demo",
+                },
+            ],
+            key_prefix="home_pdp",
+        )
+
         status = st.session_state.proto_home_status
         if status == "browsing":
             b1, b2 = st.columns(2)
