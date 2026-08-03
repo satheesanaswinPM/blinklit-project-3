@@ -2764,6 +2764,14 @@ def render_prototype_lab() -> None:
                 "price": 20,
                 "all_in": 29,
                 "badge": "Fresh batch · quality checked",
+                "keywords": ["chips", "lays", "snack", "crisps"],
+                "fallback": [
+                    {"rating": 5, "text": "Crispy and fresh — better than I expected for quick delivery.", "source": "demo"},
+                    {"rating": 5, "text": "Kids loved these. Packet was sealed and not crushed.", "source": "demo"},
+                    {"rating": 4, "text": "Good snack add-on with groceries. Price felt fair.", "source": "demo"},
+                    {"rating": 4, "text": "Arrived same evening. Taste was fine, no staleness.", "source": "demo"},
+                    {"rating": 3, "text": "Okay chips, a bit pricey vs local store but convenient.", "source": "demo"},
+                ],
             },
             {
                 "id": "cookies",
@@ -2771,6 +2779,14 @@ def render_prototype_lab() -> None:
                 "price": 35,
                 "all_in": 44,
                 "badge": "Freshness sealed",
+                "keywords": ["cookie", "biscuit", "chocolate", "dark fantasy"],
+                "fallback": [
+                    {"rating": 5, "text": "Chocolate fill was soft and fresh. Great late-night pick.", "source": "demo"},
+                    {"rating": 5, "text": "Packaging intact. Would buy again with milk.", "source": "demo"},
+                    {"rating": 4, "text": "Tasty cookies. Delivery was quick after my grocery order.", "source": "demo"},
+                    {"rating": 4, "text": "Nice quality for an impulse add. No melted mess.", "source": "demo"},
+                    {"rating": 2, "text": "A bit expensive for the pack size, but quality was decent.", "source": "demo"},
+                ],
             },
             {
                 "id": "drink",
@@ -2778,6 +2794,14 @@ def render_prototype_lab() -> None:
                 "price": 40,
                 "all_in": 49,
                 "badge": "Cold & ready",
+                "keywords": ["coke", "cola", "cold drink", "beverage", "soft drink"],
+                "fallback": [
+                    {"rating": 5, "text": "Cold bottle, perfect with snacks. Fast delivery.", "source": "demo"},
+                    {"rating": 5, "text": "Always reliable. Easy to add while reordering groceries.", "source": "demo"},
+                    {"rating": 4, "text": "Good chill, seal intact. Handy for guests.", "source": "demo"},
+                    {"rating": 4, "text": "As expected. No leakage, fair price with fees shown.", "source": "demo"},
+                    {"rating": 3, "text": "Fine product — wish fees were clearer earlier.", "source": "demo"},
+                ],
             },
             {
                 "id": "nuts",
@@ -2785,6 +2809,14 @@ def render_prototype_lab() -> None:
                 "price": 149,
                 "all_in": 158,
                 "badge": "Quality guaranteed",
+                "keywords": ["nuts", "almond", "cashew", "dry fruit"],
+                "fallback": [
+                    {"rating": 5, "text": "Fresh nuts, no rancid smell. Felt premium quality.", "source": "demo"},
+                    {"rating": 5, "text": "Good mix and packing. Trusted enough to try beyond groceries.", "source": "demo"},
+                    {"rating": 4, "text": "Solid quality for the price. Will reorder.", "source": "demo"},
+                    {"rating": 4, "text": "Crunchy and fresh. Helpful when I don’t want to visit a store.", "source": "demo"},
+                    {"rating": 3, "text": "Quality okay; a few soft pieces but overall fine.", "source": "demo"},
+                ],
             },
         ]
 
