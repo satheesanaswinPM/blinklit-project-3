@@ -2829,8 +2829,6 @@ def render_prototype_lab() -> None:
             ),
         )
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 def render_evidence_lab(
     sentiment: pd.DataFrame,
