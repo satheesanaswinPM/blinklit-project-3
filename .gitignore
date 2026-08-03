@@ -14,5 +14,9 @@ frontend/dist/
 .pytest_cache/
 models/
 *.part
-.cursor/hooks/.auto_push_stamp
+output/stakeholder_events.jsonl
+output/briefs/
+output/_smoke_*
+data/eval_reports/heuristic_predictions.jsonl
+data/eval_reports/identity_predictions.jsonl
 
