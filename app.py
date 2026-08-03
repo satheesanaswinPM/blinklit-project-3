@@ -1758,9 +1758,10 @@ def render_end_to_end_workflow() -> None:
             "title": "Explore the answers in this app",
             "detail": (
                 "Use the left menu to read the story (Findings), see category ideas "
-                "(Opportunities), and check the evidence (Validation) before deciding what to try."
+                "(Opportunities), check the evidence (Validation), and try clickable MVP concepts "
+                "in Prototype Lab before deciding what to test next."
             ),
-            "stats": "Findings → Opportunities → Validation",
+            "stats": "Findings → Opportunities → Validation → Prototype Lab",
         },
     ]
 
