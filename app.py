@@ -2886,6 +2886,12 @@ def render_prototype_lab() -> None:
                         st.session_state.proto_snack_adds += 1
                         st.session_state.proto_last_add = snack["name"]
                         st.rerun()
+                    render_product_trust_panel(
+                        product_name=snack["name"],
+                        keywords=snack.get("keywords") or [],
+                        fallback_comments=snack.get("fallback") or [],
+                        key_prefix=f"snack_{snack['id']}",
+                    )
         panel_end()
 
         if st.session_state.proto_last_add:
