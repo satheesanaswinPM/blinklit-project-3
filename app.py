@@ -933,6 +933,29 @@ def inject_styles() -> None:
             padding: 0.85rem 0.9rem 0.95rem;
             box-shadow: var(--shadow);
             height: 100%;
+            min-width: 0;
+            overflow-wrap: anywhere;
+          }}
+          .proto-rail {{
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+          }}
+          @media (min-width: 900px) {{
+            .proto-rail {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
+          }}
+          .proto-rail-item {{
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+          }}
+          .proto-lab {{
+            max-width: 100%;
+            overflow-x: hidden;
           }}
           .proto-product .name {{
             font-family: "Sora", sans-serif;
@@ -940,6 +963,7 @@ def inject_styles() -> None:
             font-size: 0.98rem;
             color: {tok["ink"]} !important;
             margin-bottom: 0.35rem;
+            overflow-wrap: anywhere;
           }}
           .proto-product .price {{
             font-size: 0.9rem;
@@ -950,6 +974,7 @@ def inject_styles() -> None:
             color: {tok["muted"]} !important;
             font-size: 0.8rem;
             margin-top: 0.15rem;
+            overflow-wrap: anywhere;
           }}
           .proto-badge {{
             display: inline-block;
@@ -960,6 +985,8 @@ def inject_styles() -> None:
             color: {tok["accent"]} !important;
             font-size: 0.72rem;
             font-weight: 700;
+            max-width: 100%;
+            overflow-wrap: anywhere;
           }}
           .proto-guarantee {{
             border: 1px solid color-mix(in srgb, {tok["accent"]} 40%, {tok["line"]});
@@ -969,6 +996,7 @@ def inject_styles() -> None:
             color: {tok["ink"]} !important;
             font-weight: 650;
             margin: 0.75rem 0 1rem;
+            overflow-wrap: anywhere;
           }}
           .ai-arch {{
             display: flex;
