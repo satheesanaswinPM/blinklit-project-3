@@ -26,6 +26,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from discovery_engine.env_loader import load_env
+from discovery_engine.stakeholder_events import log_event, summarize_events
 
 load_env()
 
