@@ -70,13 +70,13 @@ def main() -> int:
     if snacks:
         check(
             snacks.get("suggested_experiment") == "exp_discover_rail",
-            "snacks → exp_discover_rail",
+            "snacks links to exp_discover_rail",
         )
     home = next((c for c in syn["category_opportunities"] if c.get("category") == "home"), None)
     if home:
         check(
             home.get("suggested_experiment") == "exp_first_buy_guarantee",
-            "home → exp_first_buy_guarantee",
+            "home links to exp_first_buy_guarantee",
         )
 
     h1 = next((h for h in syn.get("hypotheses", []) if h.get("id") == "H1"), None)

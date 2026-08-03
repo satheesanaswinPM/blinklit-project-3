@@ -1,67 +1,61 @@
 {
   "primary_question": "Why don't Blinkit users explore new categories?",
-  "generated_at": "2026-08-01T21:22:41.304261+00:00",
+  "generated_at": "2026-08-03T19:40:40.497137+00:00",
   "corpus": {
-    "total_reviews": 3200,
-    "exploration_relevant": 852,
-    "relevance_rate": 0.266,
+    "total_reviews": 2818,
+    "exploration_relevant": 643,
+    "relevance_rate": 0.228,
     "by_source": {
-      "play_store": 2836,
-      "app_store": 264,
-      "reddit": 29,
-      "product_review": 23,
-      "social": 18,
-      "forum": 18,
-      "nps": 12
+      "play_store": 2818
     },
     "exploration_signals": {
-      "noise": 2348,
-      "want_to_explore_blocked": 528,
-      "unclear": 212,
-      "stuck_in_routine": 109,
-      "explored_new": 3
+      "noise": 2175,
+      "want_to_explore_blocked": 395,
+      "unclear": 166,
+      "stuck_in_routine": 80,
+      "explored_new": 2
     },
     "notes": [
       "Behavioral clusters observed: {'Price Sensitive': 1736, 'Routine Buyers': 554, 'Explorers': 348, 'Impulse Buyers': 180}",
-      "Top themes: good good / good / sarvice good / good sarvice, 3स / 3स 𝙜𝙤𝙤𝙙 / 5star / 5star ooo, hai / bhi / bahut / nahi, nice nice / nice / good nice / nice good, good service / fast service / service good / service fast"
+      "Top themes: Outliers / mixed, 3स / 3स 𝙜𝙤𝙤𝙙 / 5star / 5star ooo, hai / bhi / bahut / nahi, time / time time / delivery time / time delivery, best best / best / delivery best / best experience"
     ]
   },
-  "executive_summary": "Across 3,200 multi-source reviews (852 exploration-relevant), users mostly stay in grocery routines or bounce when discovery, quality trust, or price clarity fail. Dominant barriers: dont trust quality for new category, price uncertainty new category, coverage or eta. Category expansion opportunity concentrates in snacks, home, electronics. Recommended next step: run discovery-rail + first-buy guarantee experiments on the top blocked categories.",
+  "executive_summary": "Across 2,818 multi-source reviews (643 exploration-relevant), users mostly stay in grocery routines or bounce when discovery, quality trust, or price clarity fail. Dominant barriers: dont trust quality for new category, price uncertainty new category, coverage or eta. Category expansion opportunity concentrates in snacks, home, electronics. Recommended next step: run discovery-rail + first-buy guarantee experiments on the top blocked categories.",
   "barriers_ranked": [
     {
       "barrier": "dont_trust_quality_for_new_category",
-      "mentions": 277,
-      "share": 0.355,
+      "mentions": 211,
+      "share": 0.36,
       "severity": "high"
     },
     {
       "barrier": "price_uncertainty_new_category",
-      "mentions": 161,
-      "share": 0.206,
+      "mentions": 133,
+      "share": 0.227,
       "severity": "medium"
     },
     {
       "barrier": "coverage_or_eta",
-      "mentions": 143,
-      "share": 0.183,
-      "severity": "medium"
-    },
-    {
-      "barrier": "habit_reorder_only",
-      "mentions": 82,
-      "share": 0.105,
+      "mentions": 131,
+      "share": 0.224,
       "severity": "medium"
     },
     {
       "barrier": "assortment_gap",
-      "mentions": 78,
-      "share": 0.1,
+      "mentions": 67,
+      "share": 0.114,
       "severity": "medium"
     },
     {
+      "barrier": "habit_reorder_only",
+      "mentions": 36,
+      "share": 0.061,
+      "severity": "low"
+    },
+    {
       "barrier": "hard_to_discover_in_app",
-      "mentions": 39,
-      "share": 0.05,
+      "mentions": 8,
+      "share": 0.014,
       "severity": "low"
     }
   ],
@@ -89,7 +83,7 @@
     {
       "need": "Visible, trusted paths into non-grocery categories during habitual grocery sessions",
       "pain": "Discovery is search-dependent; reorderers never see adjacency",
-      "evidence": "stuck_in_routine=109, discover barrier mentions",
+      "evidence": "stuck_in_routine=80, discover barrier mentions",
       "priority": "P0"
     },
     {
@@ -116,42 +110,42 @@
       "id": "H1",
       "statement": "Users fail to explore new categories because in-app discovery does not surface adjacent categories during grocery sessions.",
       "linked_barrier": "hard_to_discover_in_app",
-      "evidence_mentions": 0,
+      "evidence_mentions": 8,
       "status": "open"
     },
     {
       "id": "H2",
       "statement": "Users avoid new categories because quality/authenticity risk feels higher than grocery.",
       "linked_barrier": "dont_trust_quality_for_new_category",
-      "evidence_mentions": 277,
+      "evidence_mentions": 211,
       "status": "open"
     },
     {
       "id": "H3",
       "statement": "Users hesitate on new categories when all-in price and fees are unclear relative to offline.",
       "linked_barrier": "price_uncertainty_new_category",
-      "evidence_mentions": 161,
+      "evidence_mentions": 133,
       "status": "open"
     },
     {
       "id": "H4",
       "statement": "Power users stay in reorder loops that never expose non-grocery demand.",
       "linked_barrier": "habit_reorder_only",
-      "evidence_mentions": 82,
+      "evidence_mentions": 36,
       "status": "open"
     },
     {
       "id": "H5",
       "statement": "Exploration intent dies when expected SKUs are missing or out of stock.",
       "linked_barrier": "assortment_gap",
-      "evidence_mentions": 78,
+      "evidence_mentions": 67,
       "status": "open"
     },
     {
       "id": "H6",
       "statement": "ETA/coverage anxiety reduces willingness to try unfamiliar categories.",
       "linked_barrier": "coverage_or_eta",
-      "evidence_mentions": 143,
+      "evidence_mentions": 131,
       "status": "open"
     }
   ],
@@ -201,17 +195,17 @@
     {
       "rank": 1,
       "category": "snacks",
-      "blocked_mentions": 32,
-      "opportunity_score": 100,
+      "blocked_mentions": 7,
+      "opportunity_score": 54,
       "why_now": "Adjacent to grocery — easiest expansion wedge.",
-      "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
-      "suggested_experiment": "exp_first_buy_guarantee"
+      "primary_barrier_to_attack": "hard_to_discover_in_app",
+      "suggested_experiment": "exp_discover_rail"
     },
     {
       "rank": 2,
       "category": "home",
-      "blocked_mentions": 12,
-      "opportunity_score": 64,
+      "blocked_mentions": 6,
+      "opportunity_score": 52,
       "why_now": "Assortment gaps and 'not for Blinkit' mental model.",
       "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
       "suggested_experiment": "exp_first_buy_guarantee"
@@ -219,8 +213,8 @@
     {
       "rank": 3,
       "category": "electronics",
-      "blocked_mentions": 7,
-      "opportunity_score": 54,
+      "blocked_mentions": 5,
+      "opportunity_score": 50,
       "why_now": "High intent + high distrust; quality and authenticity cues matter most.",
       "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
       "suggested_experiment": "exp_first_buy_guarantee"
@@ -228,27 +222,9 @@
     {
       "rank": 4,
       "category": "pet",
-      "blocked_mentions": 6,
-      "opportunity_score": 52,
+      "blocked_mentions": 3,
+      "opportunity_score": 46,
       "why_now": "Niche but sticky once tried; trust on freshness/expiry.",
-      "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
-      "suggested_experiment": "exp_first_buy_guarantee"
-    },
-    {
-      "rank": 5,
-      "category": "pharmacy",
-      "blocked_mentions": 6,
-      "opportunity_score": 52,
-      "why_now": "Regulatory/trust barriers; careful messaging.",
-      "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
-      "suggested_experiment": "exp_first_buy_guarantee"
-    },
-    {
-      "rank": 6,
-      "category": "beauty",
-      "blocked_mentions": 1,
-      "opportunity_score": 42,
-      "why_now": "Discovery-friendly but needs sampling / return confidence.",
       "primary_barrier_to_attack": "dont_trust_quality_for_new_category",
       "suggested_experiment": "exp_first_buy_guarantee"
     }
