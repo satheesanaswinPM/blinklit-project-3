@@ -2399,6 +2399,34 @@ def render_try_it_console() -> None:
         st.json(result)
 
 
+def render_prototype_lab() -> None:
+    """Clickable MVP mock workspace for category-expansion concepts."""
+    page_header(
+        "Prototype Lab",
+        "Clickable MVP mocks for category expansion — not the live Blinkit app.",
+    )
+    st.info(
+        "Research prototypes for stakeholder demos. Interactions stay in this dashboard only — "
+        "no real cart, payments, or Blinkit backend."
+    )
+    panel_start(
+        "Coming next",
+        "Interactive mocks for the two highest-leverage MVPs from synthesis.",
+    )
+    st.markdown(
+        """
+**MVP 1 — Grocery → Snacks rail**  
+Contextual “Also useful tonight” snacks strip after a grocery add (discovery + habit).
+
+**MVP 2 — Home first-buy guarantee**  
+Quality badge + one-tap easy return on a first Home purchase (trust / risk).
+
+Use **Category Opportunities** and **Findings Board** for the evidence behind these bets.
+        """
+    )
+    panel_end()
+
+
 def render_evidence_lab(
     sentiment: pd.DataFrame,
     themes: pd.DataFrame,
