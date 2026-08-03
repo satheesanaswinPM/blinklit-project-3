@@ -3429,6 +3429,21 @@ def render_prototype_lab() -> None:
                 "or open Findings Board after generating `output/synthesis.json`."
             ),
         )
+        from llm.experiment_brief import build_experiment_brief as _build_home_brief
+
+        st.download_button(
+            "Download experiment brief (.md)",
+            data=_build_home_brief(
+                synthesis or {},
+                experiment_id="exp_first_buy_guarantee",
+                category="home",
+                mvp_title="Home first-buy quality guarantee",
+                prototype="Prototype Lab · MVP 2",
+            ),
+            file_name="exp_first_buy_guarantee_brief.md",
+            mime="text/markdown",
+            key="dl_brief_home_mvp",
+        )
 
 
 def render_evidence_lab(
