@@ -3619,6 +3619,9 @@ def main() -> None:
         page_labels = [f"{PAGE_ICONS[p]}  {p}" for p in PAGES]
         choice = st.radio("Navigate", page_labels, label_visibility="collapsed", key="nav_page")
         page = choice.split("  ", 1)[-1].strip()
+        if st.session_state.get("_last_logged_page") != page:
+            log_event("page_view", page=page)
+            st.session_state._last_logged_page = page
 
         st.markdown("---")
         st.caption("Data · `output/` + `data/processed/`")
