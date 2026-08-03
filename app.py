@@ -5,7 +5,7 @@ Primary question: Why don't Blinkit users explore new categories?
 
 IA (parity with reference, not a clone):
   Findings Board · Category Opportunities · Validation Desk ·
-  Live Pipeline · Try-it Console · Evidence Lab · Methodology · Admin
+  Live Pipeline · Try-it Console · Prototype Lab · Evidence Lab · Methodology · Admin
 
 Run from repo root:
   streamlit run app.py
