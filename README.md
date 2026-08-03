@@ -1,6 +1,11 @@
-# Blinkit Grad Project — Discovery Insight Engine
+# Blinkit Grad Project — Category Discovery Engine
 
-Unified Phase 0 + Phase 1 codebase for turning multi-channel quick-commerce feedback into grounded category-discovery insights.
+Research console for the primary question:
+
+> **Why don't Blinkit users explore new categories?**
+
+**Primary UX:** Streamlit dashboard (`app.py`).  
+**Optional advanced:** React Theme Explorer + FastAPI (see [Optional Theme Explorer](#optional-theme-explorer-advanced)).
 
 | Doc | Purpose |
 | --- | --- |
@@ -10,32 +15,7 @@ Unified Phase 0 + Phase 1 codebase for turning multi-channel quick-commerce feed
 | [docs/LABELING_GUIDE.md](./docs/LABELING_GUIDE.md) | Gold labeling rules |
 | [docs/METRICS.md](./docs/METRICS.md) | Offline metrics |
 
-## Layout
-
-```
-.
-├── discovery_engine/     # Python package (phase0 + phase1)
-│   ├── phase0/           # taxonomies loader, gold validate, eval harness
-│   ├── collectors/       # CSV ingest
-│   ├── nlp/              # clean, preprocess, embed, label, cluster, BERTopic
-│   ├── storage/          # SQLite
-│   ├── pipeline.py       # Phase 1 end-to-end batch
-│   └── api.py            # FastAPI Theme Explorer
-├── scripts/              # CLIs for both phases
-├── taxonomies/           # shared category / barrier / insight JSON
-├── schemas/              # gold label schema
-├── data/
-│   ├── gold/             # gold_labels.jsonl
-│   ├── raw/              # Play / Reddit / sample CSVs
-│   ├── processed/        # DB, BERTopic outputs, preprocessed CSV
-│   └── fixtures/
-├── frontend/             # React Theme Explorer
-├── docs/
-├── .env.example
-└── requirements.txt
-```
-
-## Setup
+## Quick start (primary path)
 
 ```bash
 python -m venv .venv
@@ -43,31 +23,98 @@ python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-# fill HF_TOKEN, OPENAI_API_KEY, REDDIT_* as needed
+
+# Reuse existing raw CSVs (no network) → full 13-stage pipeline
+python main.py --skip-collect
+
+# Research console
+python -m streamlit run app.py
 ```
 
-## Phase 0 — foundation
+## Streamlit IA
+
+| Page | Purpose |
+| --- | --- |
+| **Findings Board** | Executive summary, barriers, JTBD, unmet needs, experiments |
+| **Category Opportunities** | Ranked expansion bets (e.g. snacks, home) |
+| **Validation Desk** | Hypothesis triangulation + human approve/reject review |
+| **Live Pipeline** | Artifact freshness board |
+| **Try-it Console** | Paste a review → exploration tags |
+| **Prototype Lab** | Clickable MVP mocks (snacks discovery rail · Home first-buy guarantee) |
+| **Evidence Lab** | Quote / theme evidence deep-dive |
+| **Methodology** | Pipeline explained |
+| **Admin** | Password-gated ops (`ADMIN_DASHBOARD_PASSWORD`) |
+
+## Layout
+
+```
+.
+├── app.py                 # Primary Streamlit research console
+├── main.py                # 13-stage end-to-end pipeline
+├── analysis/              # themes, sentiment, segments, exploration
+├── llm/                   # insights + synthesis
+├── discovery_engine/      # collectors, NLP helpers, optional FastAPI
+├── scripts/               # gold/eval/smoke CLIs
+├── data/raw|processed/    # corpus artifacts
+├── output/                # themes, sentiment, synthesis, reviews…
+├── frontend/              # Optional React Theme Explorer (advanced)
+└── docs/
+```
+
+## Pipeline (`main.py`) — 13 stages
+
+1. Collect Google Play reviews  
+2. Collect App Store reviews  
+3. Collect Reddit posts  
+4. Collect YouTube comments  
+5. Merge multi-source corpus → `data/processed/merged_reviews.csv`  
+6. Clean / soft-dedupe → `data/processed/preprocessed_reviews.csv`  
+7. Embeddings → `data/processed/review_embeddings.npy`  
+8. Themes (BERTopic) → `output/themes.csv`  
+9. Sentiment → `output/sentiment.csv`  
+10. Segments → `output/user_segments.csv`  
+11. Exploration tagging → `output/exploration_tags.csv`  
+12. Product insights → `output/insights.json`  
+13. Synthesis (JTBD / experiments / category ops) → `output/synthesis.json`  
+
+```bash
+python main.py
+python main.py --play-count 100 --reddit-limit 15
+python main.py --skip-collect   # reuse data/raw; no live scrapes
+```
+
+NLP analysis (sentiment / segments / exploration / themes filter) aligns on the **preprocessed** corpus so dashboard KPIs stay consistent.
+
+## Prototype Lab MVPs
+
+Linked from synthesis when available:
+
+| Tab | Experiment | Category / barrier |
+| --- | --- | --- |
+| Snacks “Also useful tonight” rail | `exp_discover_rail` | snacks · hard to discover |
+| Home first-buy quality guarantee | `exp_first_buy_guarantee` | home · quality distrust |
+
+## Smoke checks & CI
+
+```bash
+python scripts/smoke_check.py
+```
+
+GitHub Actions runs this on pull requests (see `.github/workflows/smoke.yml`).
+
+## Phase 0 — gold foundation
 
 ```bash
 python -m scripts.generate_seed_gold --n 220
 python -m scripts.validate_gold
-python -m scripts.run_eval
+python -m scripts.run_eval   # identity baseline today — not a real quality score
 ```
 
-## Phase 1 — collectors → NLP → Theme Explorer
+## Optional Theme Explorer (advanced)
+
+Secondary path for BERTopic/API deep-dives. **Stakeholders should use Streamlit.**
 
 ```bash
-# optional live collectors
-python -m scripts.download_blinkit_play_reviews --count 200
-python -m scripts.download_reddit_posts --limit 25
-
-# preprocess + BERTopic (optional deep dive)
-python -m scripts.preprocess_reviews --in data/raw/blinkit_play_reviews.csv --text-col Review
-python -m scripts.run_bertopic_clusters --in data/raw/blinkit_play_reviews.csv --text-col Review --preprocess --no-openai
-
-# seed sample corpus + insight pipeline → SQLite
-python -m scripts.run_pipeline
-
 # API
 uvicorn discovery_engine.api:app --reload
 
@@ -77,58 +124,8 @@ npm install
 npm run dev
 ```
 
-## Theme analysis (BERTopic)
+See [frontend/README.md](./frontend/README.md).
 
-```bash
-python -m analysis.themes --in data/raw/blinkit_play_reviews.csv --text-col Review
-# writes output/themes.csv
-# caches embeddings to data/processed/review_embeddings.npy
-```
+## Env
 
-## Sentiment analysis (HuggingFace)
-
-```bash
-python -m analysis.sentiment --in data/raw/blinkit_play_reviews.csv --text-col Review
-# writes output/sentiment.csv  (Review, Sentiment, Confidence Score)
-# uses HF_TOKEN from .env when set
-```
-
-## User segments (KMeans)
-
-```bash
-python -m analysis.segments --in data/raw/blinkit_play_reviews.csv --text-col Review
-# writes output/user_segments.csv
-# Segments: Routine Buyers | Explorers | Price Sensitive | Impulse Buyers
-```
-
-## Product insights (LLM)
-
-```bash
-python -m llm.insights
-# reads output/themes.csv + output/sentiment.csv (+ user_segments.csv if present)
-# writes output/insights.json
-# uses OPENAI_API_KEY from .env; falls back to grounded heuristics if unavailable
-```
-
-## Full pipeline
-
-```bash
-python main.py
-python main.py --play-count 100 --reddit-limit 15
-python main.py --skip-collect   # reuse existing data/raw CSVs
-```
-
-Runs in order: Play collect → Reddit collect → clean → embeddings → themes → sentiment → segments → insights. Prints progress after each stage; Reddit is skipped (with a warning) if credentials are missing.
-
-## Streamlit dashboard
-
-```bash
-python -m streamlit run app.py
-# or: streamlit run app.py  (if streamlit is on PATH)
-```
-
-Left sidebar navigates Overview, Top Themes, Sentiment, User Segments, Product Insights, Opportunity Ranking, and Methodology. Charts use Plotly; data is read from `output/`.
-
-## Auto-push to GitHub
-
-Cursor project hooks (`.cursor/hooks.json`) run `python .cursor/hooks/auto_push.py` after agent file edits and when the agent stops. The script stages changes (honoring `.gitignore`), commits, and pushes to `origin` on the current branch. Rapid edits are debounced (~45s). Never force-pushes; `.env` stays excluded.
+Copy `.env.example` → `.env`. Common keys: `HF_TOKEN`, `OPENAI_API_KEY` / `GROQ_API_KEY`, `REDDIT_*`, `YOUTUBE_API_KEY`, `ADMIN_DASHBOARD_PASSWORD`.
