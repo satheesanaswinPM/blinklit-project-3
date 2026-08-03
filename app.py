@@ -2217,6 +2217,8 @@ def render_findings_board(synthesis: dict, insights: dict) -> None:
 
     render_experiment_brief_export(synthesis)
 
+
+def render_category_opportunities(synthesis: dict) -> None:
     page_header(
         "Category Opportunities",
         "Where blocked exploration intent concentrates — ranked for product bets.",
