@@ -3165,6 +3165,7 @@ def render_prototype_lab() -> None:
             st.session_state.proto_sessions = 1
             st.session_state.proto_snack_adds = 0
             st.session_state.proto_last_add = ""
+            log_event("mvp_action", mvp="snacks_rail", action="reset_demo")
             st.rerun()
 
         panel_start("Your grocery cart", "Habitual reorder session already started")
