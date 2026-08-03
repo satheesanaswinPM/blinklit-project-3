@@ -27,7 +27,7 @@ def main() -> int:
         "output/sentiment.csv",
         "output/user_segments.csv",
         "data/processed/merged_reviews.csv",
-        "data/processed/cleaned_reviews.csv",
+        "data/processed/preprocessed_reviews.csv",
     ]:
         check((ROOT / rel).exists(), f"exists {rel}")
 
@@ -58,12 +58,12 @@ def main() -> int:
 
     check("key" in inspect.signature(app._show_chart).parameters, "_show_chart supports key")
 
-    cleaned = pd.read_csv(ROOT / "data/processed/cleaned_reviews.csv")
+    cleaned = pd.read_csv(ROOT / "data/processed/preprocessed_reviews.csv")
     sent = pd.read_csv(ROOT / "output/sentiment.csv")
     segs = pd.read_csv(ROOT / "output/user_segments.csv")
-    check(len(cleaned) == len(sent), f"cleaned ({len(cleaned)}) == sentiment ({len(sent)})")
-    check(len(cleaned) == len(segs), f"cleaned ({len(cleaned)}) == segments ({len(segs)})")
-    check(len(cleaned) == len(exp), f"cleaned ({len(cleaned)}) == exploration ({len(exp)})")
+    check(len(cleaned) == len(sent), f"preprocessed ({len(cleaned)}) == sentiment ({len(sent)})")
+    check(len(cleaned) == len(segs), f"preprocessed ({len(cleaned)}) == segments ({len(segs)})")
+    check(len(cleaned) == len(exp), f"preprocessed ({len(cleaned)}) == exploration ({len(exp)})")
 
     snacks = next((c for c in syn["category_opportunities"] if c.get("category") == "snacks"), None)
     check(snacks is not None, "snacks category opportunity present")
