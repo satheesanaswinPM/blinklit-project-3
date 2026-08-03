@@ -2529,7 +2529,7 @@ def build_product_rating_trust(
     *,
     keywords: list[str],
     fallback_comments: list[dict],
-    min_matches: int = 8,
+    min_matches: int = 5,
 ) -> dict:
     """
     Rating distribution + top 5 comments for a prototype product.
