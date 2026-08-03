@@ -2443,6 +2443,96 @@ def render_try_it_console() -> None:
         st.json(result)
 
 
+def _find_synthesis_experiment(synthesis: dict, exp_id: str) -> dict:
+    for exp in (synthesis or {}).get("testable_experiments") or []:
+        if str(exp.get("id") or "") == exp_id:
+            return exp
+    return {}
+
+
+def _find_category_opportunity(synthesis: dict, category: str) -> dict:
+    needle = category.strip().lower()
+    for row in (synthesis or {}).get("category_opportunities") or []:
+        if str(row.get("category") or "").strip().lower() == needle:
+            return row
+    return {}
+
+
+def _find_barrier(synthesis: dict, barrier_id: str) -> dict:
+    needle = barrier_id.strip().lower()
+    for row in (synthesis or {}).get("barriers_ranked") or []:
+        if str(row.get("barrier") or "").strip().lower() == needle:
+            return row
+    return {}
+
+
+def render_mvp_evidence_strip(
+    *,
+    synthesis: dict,
+    title: str,
+    experiment_id: str,
+    category: str | None = None,
+    barrier_id: str | None = None,
+    fallback: str,
+) -> None:
+    """Compact evidence expander under an MVP prototype (not in the hero interaction)."""
+    with st.expander(f"Why this MVP · {title}", expanded=False):
+        if not synthesis:
+            st.warning(fallback)
+            return
+
+        exp = _find_synthesis_experiment(synthesis, experiment_id)
+        cat = _find_category_opportunity(synthesis, category) if category else {}
+        barrier = _find_barrier(synthesis, barrier_id) if barrier_id else {}
+
+        if not exp and not cat and not barrier:
+            st.warning(fallback)
+            return
+
+        cols = st.columns(3)
+        with cols[0]:
+            if cat:
+                metric_card(
+                    "Category opportunity",
+                    f"#{cat.get('rank', '—')} {cat.get('category', category)}",
+                    f"score {cat.get('opportunity_score', '—')} · blocked {cat.get('blocked_mentions', 0)}",
+                )
+            else:
+                metric_card("Category opportunity", category or "—", "not found in synthesis")
+        with cols[1]:
+            if barrier:
+                metric_card(
+                    "Linked barrier",
+                    str(barrier.get("barrier", "")).replace("_", " "),
+                    f"{barrier.get('mentions', 0)} mentions · {barrier.get('severity', '')}",
+                )
+            elif exp.get("barrier"):
+                metric_card(
+                    "Linked barrier",
+                    str(exp.get("barrier")).replace("_", " "),
+                    f"experiment {experiment_id}",
+                )
+            else:
+                metric_card("Linked barrier", "—", "not found in synthesis")
+        with cols[2]:
+            if exp:
+                metric_card(
+                    "Experiment",
+                    experiment_id,
+                    str(exp.get("primary_metric") or exp.get("name") or "")[:72],
+                )
+            else:
+                metric_card("Experiment", experiment_id, "not found in synthesis")
+
+        if cat.get("why_now"):
+            st.caption(f"Why now: {cat['why_now']}")
+        if exp.get("intervention"):
+            st.markdown(f"**Intervention:** {exp['intervention']}")
+        if exp.get("guardrail"):
+            st.caption(f"Guardrail: {exp['guardrail']}")
+        st.caption("Source: `output/synthesis.json` · Category Opportunities / Findings Board")
+
+
 def render_prototype_lab() -> None:
     """Clickable MVP mocks for snacks attach + Home first-buy guarantee."""
     page_header(
@@ -2453,6 +2543,10 @@ def render_prototype_lab() -> None:
         "Research prototypes for stakeholder demos. Interactions stay in this dashboard only — "
         "no real cart, payments, or Blinkit backend."
     )
+
+    synthesis = load_synthesis()
+    if not synthesis:
+        synthesis = ensure_synthesis()
 
     tab_a, tab_b = st.tabs(
         ["MVP 1: Grocery → Snacks rail", "MVP 2: Home first-buy guarantee"]
@@ -2563,7 +2657,6 @@ def render_prototype_lab() -> None:
 
         snacks_in_cart = sum(1 for i in cart if i.get("category") == "snacks")
         sessions = max(int(st.session_state.proto_sessions), 1)
-        # Demo metric: sessions with ≥1 snack attach, approximated by snack add events / sessions
         attach_rate = min(1.0, st.session_state.proto_snack_adds / sessions)
         m1, m2, m3 = st.columns(3)
         with m1:
@@ -2591,10 +2684,16 @@ def render_prototype_lab() -> None:
                 st.session_state.proto_last_add = ""
                 st.rerun()
 
-        st.caption(
-            "Why this MVP: attacks **discovery + habit during reorder**. "
-            "Snacks is the **#1 category opportunity** (adjacent to grocery, easiest attach, "
-            "highest blocked-intent volume in synthesis)."
+        render_mvp_evidence_strip(
+            synthesis=synthesis,
+            title="Snacks discovery rail",
+            experiment_id="exp_discover_rail",
+            category="snacks",
+            barrier_id="hard_to_discover_in_app",
+            fallback=(
+                "Synthesis evidence unavailable. Run `python -m llm.synthesis --no-polish` "
+                "or open Category Opportunities after generating `output/synthesis.json`."
+            ),
         )
 
     # ------------------------------------------------------------------
@@ -2602,7 +2701,7 @@ def render_prototype_lab() -> None:
     # ------------------------------------------------------------------
     with tab_b:
         if "proto_home_status" not in st.session_state:
-            st.session_state.proto_home_status = "browsing"  # browsing | bought | returned | skipped
+            st.session_state.proto_home_status = "browsing"
         if "proto_home_views" not in st.session_state:
             st.session_state.proto_home_views = 1
         if "proto_home_buys" not in st.session_state:
@@ -2661,7 +2760,7 @@ def render_prototype_lab() -> None:
             if st.button("Back to product", key="home_back_from_return"):
                 st.session_state.proto_home_status = "browsing"
                 st.rerun()
-        else:  # skipped
+        else:
             st.info("Skipped this time — quality distrust still wins unless the guarantee feels real.")
             if st.button("Reconsider product", key="home_reconsider"):
                 st.session_state.proto_home_status = "browsing"
@@ -2688,9 +2787,16 @@ def render_prototype_lab() -> None:
             st.session_state.proto_home_views += 1
             st.rerun()
 
-        st.caption(
-            "Why this MVP: attacks **quality distrust** (top barrier, ~277 mentions). "
-            "Home is the **#2 category opportunity** — higher basket value once the first buy feels safe."
+        render_mvp_evidence_strip(
+            synthesis=synthesis,
+            title="Home first-buy guarantee",
+            experiment_id="exp_first_buy_guarantee",
+            category="home",
+            barrier_id="dont_trust_quality_for_new_category",
+            fallback=(
+                "Synthesis evidence unavailable. Run `python -m llm.synthesis --no-polish` "
+                "or open Findings Board after generating `output/synthesis.json`."
+            ),
         )
 
 
