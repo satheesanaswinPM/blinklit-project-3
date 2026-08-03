@@ -3065,14 +3065,25 @@ def render_prototype_lab() -> None:
     if not synthesis:
         synthesis = ensure_synthesis()
 
-    tab_a, tab_b = st.tabs(
-        ["MVP 1: Grocery → Snacks rail", "MVP 2: Home first-buy guarantee"]
+    mvp_choice = st.radio(
+        "MVP",
+        ["snacks_rail", "home_guarantee"],
+        format_func=lambda k: (
+            "MVP 1: Grocery → Snacks rail"
+            if k == "snacks_rail"
+            else "MVP 2: Home first-buy guarantee"
+        ),
+        horizontal=True,
+        key="proto_mvp_choice",
     )
+    if st.session_state.get("_last_logged_mvp") != mvp_choice:
+        log_event("mvp_tab_view", mvp=mvp_choice, page="Prototype Lab")
+        st.session_state._last_logged_mvp = mvp_choice
 
     # ------------------------------------------------------------------
-    # Tab A — Grocery → Snacks rail
+    # MVP 1 — Grocery → Snacks rail
     # ------------------------------------------------------------------
-    with tab_a:
+    if mvp_choice == "snacks_rail":
         grocery_seed = [
             {"id": "milk", "name": "Amul Taaza Milk 1L", "price": 58, "category": "grocery"},
             {"id": "bread", "name": "Britannia Bread", "price": 45, "category": "grocery"},
