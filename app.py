@@ -2196,9 +2196,40 @@ def render_category_opportunities(synthesis: dict) -> None:
     download_csv_button(df, "category_opportunities.csv", "Download category opportunities")
 
 
+def load_hypothesis_reviews(path: Path | None = None) -> dict:
+    """Load human review decisions keyed by hypothesis id."""
+    target = path or HYPOTHESIS_REVIEWS_PATH
+    if not target.exists():
+        return {"updated_at": None, "reviews": {}}
+    try:
+        data = json.loads(target.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return {"updated_at": None, "reviews": {}}
+    if not isinstance(data, dict):
+        return {"updated_at": None, "reviews": {}}
+    reviews = data.get("reviews")
+    if not isinstance(reviews, dict):
+        reviews = {}
+    return {"updated_at": data.get("updated_at"), "reviews": reviews}
+
+
+def save_hypothesis_reviews(reviews: dict, path: Path | None = None) -> Path:
+    """Persist human review decisions to output/hypothesis_reviews.json."""
+    target = path or HYPOTHESIS_REVIEWS_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "updated_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "primary_question": PRIMARY_QUESTION,
+        "reviews": reviews,
+    }
+    target.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return target
+
+
 def build_hypothesis_triangulation(
     exploration: pd.DataFrame,
     synthesis: dict,
+    reviews: dict | None = None,
 ) -> pd.DataFrame:
     """Per-hypothesis evidence counts + cross-source triangulation from tagged corpus."""
     hyps = (synthesis or {}).get("hypotheses") or []
@@ -2208,6 +2239,12 @@ def build_hypothesis_triangulation(
     df = exploration.copy()
     if df.empty:
         return pd.DataFrame()
+
+    review_map = {}
+    if isinstance(reviews, dict):
+        review_map = reviews.get("reviews", reviews) if "reviews" in reviews else reviews
+        if not isinstance(review_map, dict):
+            review_map = {}
 
     text_col = "text" if "text" in df.columns else ("Review" if "Review" in df.columns else None)
     has_source = "source" in df.columns
@@ -2248,7 +2285,6 @@ def build_hypothesis_triangulation(
 
         quote = ""
         if n and text_col:
-            # Prefer a relevant blocked/stuck example when available
             prefer = matched
             if "exploration_signal" in matched.columns:
                 prefer = matched[
@@ -2262,6 +2298,8 @@ def build_hypothesis_triangulation(
             quote = sample[:160] + ("…" if len(sample) > 160 else "")
 
         breakdown = ", ".join(f"{k}:{v}" for k, v in sorted(source_counts.items(), key=lambda x: -x[1]))
+        human = review_map.get(hid) or {}
+        status = str(human.get("decision") or h.get("status") or "open")
         rows.append(
             {
                 "Hypothesis": hid,
@@ -2272,7 +2310,8 @@ def build_hypothesis_triangulation(
                 "Source breakdown": breakdown or "—",
                 "Triangulation": strength,
                 "Example quote": quote or "—",
-                "Status": str(h.get("status") or "open"),
+                "Status": status,
+                "Reviewer note": str(human.get("note") or ""),
             }
         )
 
@@ -2283,6 +2322,150 @@ def build_hypothesis_triangulation(
         by=["Evidence mentions", "Sources with evidence"],
         ascending=[False, False],
     ).reset_index(drop=True)
+
+
+def render_hypothesis_review_panel(hyp_table: pd.DataFrame, synthesis: dict) -> None:
+    """Human review checklist: approve / reject / needs evidence per hypothesis."""
+    panel_start(
+        "Human review checklist",
+        "Approve or reject each hypothesis before treating it as decision-grade.",
+    )
+    stored = load_hypothesis_reviews()
+    reviews = dict(stored.get("reviews") or {})
+
+    hyps = (synthesis or {}).get("hypotheses") or []
+    if not hyps and hyp_table.empty:
+        st.info("No hypotheses to review yet.")
+        panel_end()
+        return
+
+    # Summary strip
+    decisions = [str((reviews.get(str(h.get("id"))) or {}).get("decision") or "open") for h in hyps]
+    if not decisions and not hyp_table.empty:
+        decisions = [str(x) for x in hyp_table["Status"].tolist()]
+    n_approved = sum(1 for d in decisions if d == "approved")
+    n_rejected = sum(1 for d in decisions if d == "rejected")
+    n_needs = sum(1 for d in decisions if d == "needs_evidence")
+    n_open = sum(1 for d in decisions if d not in {"approved", "rejected", "needs_evidence"})
+    s1, s2, s3, s4 = st.columns(4)
+    with s1:
+        metric_card("Approved", str(n_approved), "ready to brief")
+    with s2:
+        metric_card("Rejected", str(n_rejected), "do not ship on this claim")
+    with s3:
+        metric_card("Needs evidence", str(n_needs), "gather more quotes")
+    with s4:
+        metric_card("Still open", str(n_open), "awaiting review")
+
+    st.markdown("**Before deciding, confirm:**")
+    for _, label in REVIEW_CHECKLIST:
+        st.markdown(f"- {label}")
+
+    options = []
+    label_by_id = {}
+    for h in hyps:
+        hid = str(h.get("id") or "")
+        if not hid:
+            continue
+        barrier = str(h.get("linked_barrier") or "").replace("_", " ")
+        label = f"{hid} · {barrier}"
+        options.append(hid)
+        label_by_id[hid] = label
+    if not options and not hyp_table.empty:
+        for _, row in hyp_table.iterrows():
+            hid = str(row.get("Hypothesis") or "")
+            if hid:
+                options.append(hid)
+                label_by_id[hid] = f"{hid} · {row.get('Linked barrier') or ''}"
+
+    if not options:
+        st.info("No hypothesis ids found.")
+        panel_end()
+        return
+
+    pick = st.selectbox(
+        "Hypothesis to review",
+        options,
+        format_func=lambda x: label_by_id.get(x, x),
+        key="hyp_review_pick",
+    )
+    current = reviews.get(pick) or {}
+    statement = ""
+    for h in hyps:
+        if str(h.get("id")) == pick:
+            statement = str(h.get("statement") or "")
+            break
+    if not statement and not hyp_table.empty:
+        hit = hyp_table[hyp_table["Hypothesis"] == pick]
+        if not hit.empty:
+            statement = str(hit.iloc[0].get("Statement") or "")
+    if statement:
+        st.caption(statement)
+
+    checked = current.get("checklist") or {}
+    checklist_state = {}
+    for key, label in REVIEW_CHECKLIST:
+        checklist_state[key] = st.checkbox(
+            label,
+            value=bool(checked.get(key)),
+            key=f"hyp_check_{pick}_{key}",
+        )
+
+    decision_labels = {
+        "open": "Open (not reviewed)",
+        "approved": "Approve",
+        "rejected": "Reject",
+        "needs_evidence": "Needs more evidence",
+    }
+    default_decision = str(current.get("decision") or "open")
+    if default_decision not in REVIEW_DECISIONS:
+        default_decision = "open"
+    decision = st.radio(
+        "Decision",
+        list(REVIEW_DECISIONS),
+        index=list(REVIEW_DECISIONS).index(default_decision),
+        format_func=lambda d: decision_labels[d],
+        horizontal=True,
+        key=f"hyp_decision_{pick}",
+    )
+    note = st.text_area(
+        "Reviewer note (optional)",
+        value=str(current.get("note") or ""),
+        key=f"hyp_note_{pick}",
+        height=80,
+    )
+
+    c_save, c_clear = st.columns(2)
+    with c_save:
+        if st.button("Save review", type="primary", key="save_hyp_review", use_container_width=True):
+            reviews[pick] = {
+                "decision": decision,
+                "checklist": checklist_state,
+                "note": note.strip(),
+                "reviewed_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+            path = save_hypothesis_reviews(reviews)
+            st.success(f"Saved review for {pick} → {path.relative_to(ROOT)}")
+            st.rerun()
+    with c_clear:
+        if st.button("Reset this hypothesis", key="clear_hyp_review", use_container_width=True):
+            if pick in reviews:
+                del reviews[pick]
+                save_hypothesis_reviews(reviews)
+            st.info(f"Cleared review for {pick}")
+            st.rerun()
+
+    if stored.get("updated_at"):
+        st.caption(f"Last review file update: {stored['updated_at']}")
+    if HYPOTHESIS_REVIEWS_PATH.exists():
+        st.download_button(
+            "Download hypothesis_reviews.json",
+            data=HYPOTHESIS_REVIEWS_PATH.read_text(encoding="utf-8"),
+            file_name="hypothesis_reviews.json",
+            mime="application/json",
+            key="dl_hyp_reviews",
+        )
+    panel_end()
 
 
 def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synthesis: dict) -> None:
@@ -2307,8 +2490,8 @@ def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synt
         )
         metric_card("Sources", str(len(sources)), ", ".join(list(sources.keys())[:4]) or "—")
 
-    # Per-hypothesis evidence & triangulation
-    hyp_table = build_hypothesis_triangulation(exploration, synthesis or {})
+    reviews = load_hypothesis_reviews()
+    hyp_table = build_hypothesis_triangulation(exploration, synthesis or {}, reviews=reviews)
     panel_start(
         "Per-hypothesis evidence & triangulation",
         "Mentions of each linked barrier, spread across sources, with an example quote.",
@@ -2343,6 +2526,8 @@ def render_validation_desk(exploration: pd.DataFrame, merged: pd.DataFrame, synt
             "Download hypothesis evidence table",
         )
     panel_end()
+
+    render_hypothesis_review_panel(hyp_table, synthesis or {})
 
     if "exploration_signal" in exploration.columns:
         panel_start("Exploration signal mix")
