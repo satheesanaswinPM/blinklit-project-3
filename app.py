@@ -142,6 +142,12 @@ def load_themes() -> pd.DataFrame:
     if "Representative reviews" not in df.columns:
         df["Representative reviews"] = ""
     df["Number of reviews"] = pd.to_numeric(df["Number of reviews"], errors="coerce").fillna(0).astype(int)
+    try:
+        from analysis.themes import filter_low_information_themes
+
+        df = filter_low_information_themes(df)
+    except Exception:  # noqa: BLE001
+        pass
     df["Display name"] = df.apply(_theme_display_name, axis=1)
     return df.sort_values("Number of reviews", ascending=False).reset_index(drop=True)
 
