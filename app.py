@@ -3258,6 +3258,7 @@ def render_prototype_lab() -> None:
             st.session_state.proto_sessions += 1
             st.session_state.proto_cart = list(grocery_seed)
             st.session_state.proto_last_add = ""
+            log_event("mvp_action", mvp="snacks_rail", action="new_session")
             st.rerun()
 
         render_mvp_evidence_strip(
@@ -3271,14 +3272,27 @@ def render_prototype_lab() -> None:
                 "or open Category Opportunities after generating `output/synthesis.json`."
             ),
         )
+        from llm.experiment_brief import build_experiment_brief
+
+        st.download_button(
+            "Download experiment brief (.md)",
+            data=build_experiment_brief(
+                synthesis or {},
+                experiment_id="exp_discover_rail",
+                category="snacks",
+                mvp_title="Grocery → Snacks discovery rail",
+                prototype="Prototype Lab · MVP 1",
+            ),
+            file_name="exp_discover_rail_brief.md",
+            mime="text/markdown",
+            key="dl_brief_snacks_mvp",
+        )
 
     # ------------------------------------------------------------------
-    # Tab B — Home first-buy guarantee
+    # MVP 2 — Home first-buy guarantee
     # ------------------------------------------------------------------
     else:
-        # ------------------------------------------------------------------
-        # MVP 2 — Home first-buy guarantee
-        # ------------------------------------------------------------------
+        # Home first-buy guarantee MVP
         if "proto_home_status" not in st.session_state:
             st.session_state.proto_home_status = "browsing"
         if "proto_home_views" not in st.session_state:
