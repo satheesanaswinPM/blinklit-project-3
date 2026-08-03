@@ -3216,6 +3216,12 @@ def render_prototype_lab() -> None:
                         )
                         st.session_state.proto_snack_adds += 1
                         st.session_state.proto_last_add = snack["name"]
+                        log_event(
+                            "mvp_action",
+                            mvp="snacks_rail",
+                            action="add_snack",
+                            sku=snack["id"],
+                        )
                         st.rerun()
                     render_product_trust_panel(
                         product_name=snack["name"],
