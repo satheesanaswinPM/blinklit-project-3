@@ -3545,6 +3545,56 @@ def render_admin() -> None:
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
     panel_end()
 
+    panel_start(
+        "Stakeholder analytics",
+        "Page views and Prototype Lab MVP usage (local JSONL — research demos only).",
+    )
+    summary = summarize_events()
+    a1, a2, a3 = st.columns(3)
+    with a1:
+        metric_card("Events logged", str(summary.get("total_events", 0)), "output/stakeholder_events.jsonl")
+    with a2:
+        metric_card("Pages tracked", str(len(summary.get("page_views") or {})), "unique pages")
+    with a3:
+        metric_card("Last event", str(summary.get("last_event_at") or "—"), "UTC")
+    if summary.get("page_views"):
+        st.markdown("**Page views**")
+        st.dataframe(
+            pd.DataFrame(
+                [{"page": k, "views": v} for k, v in summary["page_views"].items()]
+            ),
+            hide_index=True,
+            use_container_width=True,
+        )
+    if summary.get("mvp_tab_views"):
+        st.markdown("**MVP tab views**")
+        st.dataframe(
+            pd.DataFrame(
+                [{"mvp": k, "views": v} for k, v in summary["mvp_tab_views"].items()]
+            ),
+            hide_index=True,
+            use_container_width=True,
+        )
+    if summary.get("mvp_actions"):
+        st.markdown("**MVP actions**")
+        st.dataframe(
+            pd.DataFrame(
+                [{"action": k, "count": v} for k, v in summary["mvp_actions"].items()]
+            ),
+            hide_index=True,
+            use_container_width=True,
+        )
+    events_path = ROOT / "output" / "stakeholder_events.jsonl"
+    if events_path.exists():
+        st.download_button(
+            "Download stakeholder_events.jsonl",
+            data=events_path.read_text(encoding="utf-8"),
+            file_name="stakeholder_events.jsonl",
+            mime="application/x-ndjson",
+            key="dl_stakeholder_events",
+        )
+    panel_end()
+
 
 # ---------------------------------------------------------------------------
 # App
