@@ -124,6 +124,8 @@ def detect_themes(
     n_representatives: int = 3,
 ) -> pd.DataFrame:
     """Fit BERTopic on precomputed embeddings and return theme table."""
+    from discovery_engine.nlp.bertopic_cluster import _build_topic_model
+
     if len(docs) < 2:
         raise ValueError("Need at least 2 reviews to detect themes")
 
