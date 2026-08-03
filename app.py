@@ -2533,6 +2533,32 @@ def _load_rated_reviews(_mtime: float = 0.0) -> pd.DataFrame:
     return out.reset_index(drop=True)
 
 
+def _match_product_reviews(df: pd.DataFrame, keywords: list[str]) -> pd.DataFrame:
+    """Tighter product match: whole-word / phrase hits; require ≥1 specific token (≥4 chars)."""
+    if df.empty or not keywords:
+        return df.iloc[0:0].copy()
+    keys = [k.strip().lower() for k in keywords if k and str(k).strip()]
+    # Prefer longer / more specific terms first; drop ultra-generic singles
+    specific = [k for k in keys if len(k) >= 4]
+    if not specific:
+        specific = keys
+    if not specific:
+        return df.iloc[0:0].copy()
+
+    text = df["text"].fillna("").astype(str).str.lower()
+    # Phrase / whole-word patterns (avoid matching "chip" inside unrelated words via short stems)
+    patterns = []
+    for k in specific:
+        esc = re.escape(k)
+        if " " in k:
+            patterns.append(esc)
+        else:
+            patterns.append(rf"(?<![a-z0-9]){esc}(?![a-z0-9])")
+    combined = "|".join(patterns)
+    hit = text.str.contains(combined, na=False, regex=True)
+    return df.loc[hit].copy()
+
+
 def build_product_rating_trust(
     *,
     keywords: list[str],
@@ -2541,16 +2567,13 @@ def build_product_rating_trust(
 ) -> dict:
     """
     Rating distribution + top 5 comments for a prototype product.
-    Uses corpus matches when enough exist; otherwise seeded fallbacks.
+    Uses corpus matches when enough exist; otherwise clearly labeled demo samples.
     """
     df = _load_rated_reviews(_mtime(DATA_PROC / "merged_reviews.csv"))
-    matched = df
-    if keywords and not df.empty:
-        pattern = "|".join(re.escape(k.lower()) for k in keywords if k.strip())
-        if pattern:
-            matched = df[df["text"].str.lower().str.contains(pattern, na=False, regex=True)]
+    matched = _match_product_reviews(df, keywords)
+    corpus_match_count = int(len(matched))
 
-    used_fallback = len(matched) < min_matches
+    used_fallback = corpus_match_count < min_matches
     if used_fallback:
         rows = []
         for item in fallback_comments:
@@ -2558,7 +2581,7 @@ def build_product_rating_trust(
                 {
                     "text": str(item.get("text") or ""),
                     "rating": int(item.get("rating") or 5),
-                    "source": str(item.get("source") or "prototype"),
+                    "source": "demo_sample",
                 }
             )
         matched = pd.DataFrame(rows)
@@ -2566,10 +2589,8 @@ def build_product_rating_trust(
     counts = {star: 0 for star in range(1, 6)}
     for star, n in matched["rating"].value_counts().items():
         counts[int(star)] = int(n)
-    total = max(int(len(matched)), 1)
     avg = float(matched["rating"].mean()) if len(matched) else 0.0
 
-    # Prefer higher ratings + substantive text for "top comments"
     ranked = matched.assign(_len=matched["text"].str.len()).sort_values(
         by=["rating", "_len"], ascending=[False, False]
     )
@@ -2578,11 +2599,17 @@ def build_product_rating_trust(
         quote = str(row["text"]).strip().replace("\n", " ")
         if len(quote) > 180:
             quote = quote[:177].rstrip() + "…"
+        src = str(row.get("source") or "")
+        if used_fallback:
+            evidence_label = "Demo sample (not from corpus)"
+        else:
+            evidence_label = f"Corpus · {src}" if src else "Corpus"
         top.append(
             {
                 "rating": int(row["rating"]),
                 "text": quote,
-                "source": str(row.get("source") or ""),
+                "source": src,
+                "evidence_label": evidence_label,
             }
         )
 
@@ -2592,6 +2619,7 @@ def build_product_rating_trust(
         "counts": counts,
         "top_comments": top,
         "used_fallback": used_fallback,
+        "corpus_match_count": corpus_match_count,
     }
 
 
@@ -2608,6 +2636,17 @@ def render_product_trust_panel(
     total = max(trust["total"], 1)
 
     with st.expander(f"Ratings & top comments · {product_name}", expanded=False):
+        if trust["used_fallback"]:
+            st.warning(
+                f"**Demo sample** — only {trust.get('corpus_match_count', 0)} corpus reviews "
+                f"matched this product’s keywords. Ratings below are illustrative, not live corpus evidence."
+            )
+        else:
+            st.caption(
+                f"**Corpus evidence** — {trust['total']} reviews matched product keywords "
+                f"({', '.join(keywords[:4])}{'…' if len(keywords) > 4 else ''})."
+            )
+
         c1, c2, c3 = st.columns(3)
         with c1:
             metric_card("Average rating", f"{trust['avg']:.1f}★", f"{trust['total']} ratings")
@@ -2617,10 +2656,9 @@ def render_product_trust_panel(
             metric_card(
                 "Evidence source",
                 "Corpus" if not trust["used_fallback"] else "Demo sample",
-                "helps first-time buyers trust quality",
+                "illustrative only" if trust["used_fallback"] else "matched from merged reviews",
             )
 
-        # Per-star statistics
         dist_rows = []
         for star in range(5, 0, -1):
             n = counts.get(star, 0)
@@ -2640,14 +2678,14 @@ def render_product_trust_panel(
                     x=dist_df["Count"],
                     y=dist_df["Rating"],
                     orientation="h",
-                    marker_color="#32D583",
+                    marker_color="#32D583" if not trust["used_fallback"] else "#F79009",
                     text=[f"{int(r['Count'])} ({r['Share']:.0%})" for _, r in dist_df.iterrows()],
                     textposition="outside",
                     cliponaxis=False,
                 )
             )
             fig.update_layout(
-                title="Rating breakdown",
+                title="Rating breakdown" + (" (demo)" if trust["used_fallback"] else " (corpus)"),
                 margin=dict(l=10, r=40, t=40, b=10),
                 height=220,
                 yaxis=dict(autorange="reversed"),
@@ -2669,13 +2707,17 @@ def render_product_trust_panel(
         for i, comment in enumerate(trust["top_comments"], start=1):
             stars = "★" * int(comment["rating"]) + "☆" * (5 - int(comment["rating"]))
             st.markdown(f"**{i}. {stars}** — {comment['text']}")
-            if comment.get("source"):
-                st.caption(f"Source: {comment['source']}")
+            st.caption(comment.get("evidence_label") or comment.get("source") or "")
 
-        st.caption(
-            "Trust cue for category expansion: shoppers can see how others rated this type of product "
-            "before trying it for the first time."
-        )
+        if trust["used_fallback"]:
+            st.caption(
+                "Prototype trust cue uses demo ratings until enough corpus matches exist for this SKU."
+            )
+        else:
+            st.caption(
+                "Trust cue for category expansion: shoppers can see how others rated this type of product "
+                "before trying it for the first time."
+            )
 
 
 def render_mvp_evidence_strip(

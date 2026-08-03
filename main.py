@@ -547,18 +547,24 @@ def stage_generate_insights(ctx: PipelineContext) -> Path:
 
 
 def stage_exploration_tags(ctx: PipelineContext) -> Path:
-    """Tag merged corpus for category-exploration relevance and barriers."""
+    """Tag the cleaned corpus (same rows as sentiment/segments/themes) for exploration."""
     from analysis.exploration import save_tags, tag_corpus
 
-    src = MERGED_CSV if MERGED_CSV.exists() else CLEANED_CSV
+    # Prefer cleaned so exploration counts stay in parity with NLP artifacts
+    src = CLEANED_CSV if CLEANED_CSV.exists() else MERGED_CSV
     if not src.exists():
         raise FileNotFoundError(f"No corpus for exploration tagging: {src}")
     df = pd.read_csv(src)
-    text_col = "text" if "text" in df.columns else ("Review" if "Review" in df.columns else None)
+    text_col = (
+        "Review"
+        if "Review" in df.columns
+        else ("text" if "text" in df.columns else ("cleaned_text" if "cleaned_text" in df.columns else None))
+    )
     if text_col is None:
         raise ValueError(f"No text column in {src}")
     tagged = tag_corpus(df, text_col=text_col)
     save_tags(tagged, EXPLORATION_CSV)
+    print(f"Tagged from {src.name} ({len(tagged)} rows)")
     print(tagged["exploration_signal"].value_counts().to_string())
     print(f"Relevant: {int(tagged['is_relevant'].sum())} / {len(tagged)} -> {EXPLORATION_CSV}")
     return EXPLORATION_CSV
