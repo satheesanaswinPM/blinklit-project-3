@@ -43,6 +43,79 @@ DEFAULT_IN = ROOT / "data" / "raw" / "blinkit_play_reviews.csv"
 DEFAULT_OUT = ROOT / "output" / "themes.csv"
 DEFAULT_EMB_CACHE = ROOT / "data" / "processed" / "review_embeddings.npy"
 
+# Short / generic praise themes that add little product-discovery signal
+_GENERIC_TOKENS = {
+    "good",
+    "nice",
+    "best",
+    "ok",
+    "okay",
+    "app",
+    "service",
+    "sarvice",
+    "secives",
+    "delivery",
+    "dilevery",
+    "fast",
+    "super",
+    "excellent",
+    "awesome",
+    "love",
+    "great",
+    "perfect",
+    "amazing",
+    "wow",
+    "ooo",
+    "5star",
+    "star",
+    "working",
+    "performance",
+    "application",
+}
+
+
+def _tokenize_theme_blob(text: str) -> list[str]:
+    return [t for t in re.split(r"[^a-zA-Z0-9]+", (text or "").lower()) if t]
+
+
+def is_low_information_theme(row: pd.Series | dict) -> bool:
+    """True for generic praise / spammy clusters that shouldn't drive product insights."""
+    name = str(row.get("Theme name", "") or "")
+    keywords = str(row.get("Representative keywords", "") or "")
+    n = int(pd.to_numeric(row.get("Number of reviews", 0), errors="coerce") or 0)
+    if name.strip() in {"", "Outliers / mixed", "Untitled"}:
+        return name.strip() in {"", "Untitled"}
+
+    tokens = _tokenize_theme_blob(name + " " + keywords)
+    if not tokens:
+        return True
+    generic = sum(1 for t in tokens if t in _GENERIC_TOKENS or t.isdigit() or len(t) <= 2)
+    generic_share = generic / max(len(tokens), 1)
+    unique_content = {t for t in tokens if t not in _GENERIC_TOKENS and not t.isdigit() and len(t) > 2}
+    # Drop if almost entirely generic praise, or tiny unique content with high volume of "good/nice"
+    if generic_share >= 0.75 and len(unique_content) <= 1:
+        return True
+    if len(unique_content) == 0 and n >= 10:
+        return True
+    # Repeated single-token themes like "good good / good"
+    if len(set(tokens)) <= 2 and all(t in _GENERIC_TOKENS or len(t) <= 2 for t in set(tokens)):
+        return True
+    return False
+
+
+def filter_low_information_themes(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove low-signal themes; keep outliers row if present."""
+    if df is None or df.empty:
+        return df
+    keep_mask = ~df.apply(is_low_information_theme, axis=1)
+    # Always keep explicit outliers bucket for transparency
+    if "Theme name" in df.columns:
+        keep_mask = keep_mask | df["Theme name"].astype(str).eq("Outliers / mixed")
+    out = df.loc[keep_mask].copy()
+    if "Number of reviews" in out.columns:
+        out = out.sort_values("Number of reviews", ascending=False)
+    return out.reset_index(drop=True)
+
 
 def detect_themes(
     docs: list[str],
@@ -92,13 +165,13 @@ def detect_themes(
             }
         )
 
-    # Major themes first (exclude empty); outliers last
     frame = pd.DataFrame(rows)
     frame["_outlier"] = frame["Theme name"].eq("Outliers / mixed")
     frame = frame.sort_values(
         by=["_outlier", "Number of reviews"],
         ascending=[True, False],
     ).drop(columns=["_outlier"])
+    frame = filter_low_information_themes(frame.reset_index(drop=True))
     return frame.reset_index(drop=True)
 
 
