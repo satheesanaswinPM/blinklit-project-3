@@ -2646,13 +2646,17 @@ def render_product_trust_panel(
                 height=220,
                 yaxis=dict(autorange="reversed"),
             )
-            _show_chart(_chart_layout(fig, height=220))
+            _show_chart(
+                _chart_layout(fig, height=220),
+                key=f"trust_rating_chart_{key_prefix}",
+            )
         with table_col:
             st.markdown("**Per-rating stats**")
             st.dataframe(
                 dist_df.assign(Share=lambda d: (d["Share"] * 100).round(1).astype(str) + "%"),
                 use_container_width=True,
                 hide_index=True,
+                key=f"trust_rating_table_{key_prefix}",
             )
 
         st.markdown("**Top 5 customer comments**")
