@@ -2568,14 +2568,13 @@ def render_prototype_lab() -> None:
         "Prototype Lab",
         "Clickable MVP mocks for category expansion — not the live Blinkit app.",
     )
-    st.info(
-        "Research prototypes for stakeholder demos. Interactions stay in this dashboard only — "
-        "no real cart, payments, or Blinkit backend."
-    )
+    st.caption("Research prototype for stakeholder demos — not production Blinkit.")
 
     synthesis = load_synthesis()
     if not synthesis:
         synthesis = ensure_synthesis()
+
+    st.markdown('<div class="proto-lab">', unsafe_allow_html=True)
 
     tab_a, tab_b = st.tabs(
         ["MVP 1: Grocery → Snacks rail", "MVP 2: Home first-buy guarantee"]
@@ -2629,6 +2628,13 @@ def render_prototype_lab() -> None:
         if "proto_last_add" not in st.session_state:
             st.session_state.proto_last_add = ""
 
+        if st.button("Reset demo", key="reset_snacks_demo", use_container_width=True):
+            st.session_state.proto_cart = list(grocery_seed)
+            st.session_state.proto_sessions = 1
+            st.session_state.proto_snack_adds = 0
+            st.session_state.proto_last_add = ""
+            st.rerun()
+
         panel_start("Your grocery cart", "Habitual reorder session already started")
         cart = st.session_state.proto_cart
         for item in cart:
@@ -2642,40 +2648,43 @@ def render_prototype_lab() -> None:
             "Also useful tonight",
             "Contextual snacks rail after grocery add — discovery without leaving the reorder flow",
         )
-        cols = st.columns(4)
         cart_ids = {i["id"] for i in cart}
-        for col, snack in zip(cols, snack_catalog):
-            with col:
-                st.markdown(
-                    f"""
+        # 2-up grid stacks cleanly on mobile; CSS expands to 4-up on wide screens via paired rows
+        for row_start in range(0, len(snack_catalog), 2):
+            row_items = snack_catalog[row_start : row_start + 2]
+            cols = st.columns(2)
+            for col, snack in zip(cols, row_items):
+                with col:
+                    st.markdown(
+                        f"""
 <div class="proto-product">
   <div class="name">{html.escape(snack["name"])}</div>
   <div class="price">₹{snack["price"]}</div>
   <div class="muted">All-in ₹{snack["all_in"]} (item + fees)</div>
   <div class="proto-badge">{html.escape(snack["badge"])}</div>
 </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-                already = snack["id"] in cart_ids
-                if st.button(
-                    "Added" if already else "Add",
-                    key=f"add_snack_{snack['id']}",
-                    disabled=already,
-                    use_container_width=True,
-                    type="primary" if not already else "secondary",
-                ):
-                    st.session_state.proto_cart.append(
-                        {
-                            "id": snack["id"],
-                            "name": snack["name"],
-                            "price": snack["price"],
-                            "category": "snacks",
-                        }
+                        """,
+                        unsafe_allow_html=True,
                     )
-                    st.session_state.proto_snack_adds += 1
-                    st.session_state.proto_last_add = snack["name"]
-                    st.rerun()
+                    already = snack["id"] in cart_ids
+                    if st.button(
+                        "Added" if already else "Add",
+                        key=f"add_snack_{snack['id']}",
+                        disabled=already,
+                        use_container_width=True,
+                        type="primary" if not already else "secondary",
+                    ):
+                        st.session_state.proto_cart.append(
+                            {
+                                "id": snack["id"],
+                                "name": snack["name"],
+                                "price": snack["price"],
+                                "category": "snacks",
+                            }
+                        )
+                        st.session_state.proto_snack_adds += 1
+                        st.session_state.proto_last_add = snack["name"]
+                        st.rerun()
         panel_end()
 
         if st.session_state.proto_last_add:
@@ -2698,20 +2707,13 @@ def render_prototype_lab() -> None:
         with m2:
             metric_card("Snacks in cart", str(snacks_in_cart), "this session")
         with m3:
-            metric_card("Demo sessions", str(sessions), "reset starts a new session")
+            metric_card("Demo sessions", str(sessions), "use New session below")
 
-        c_reset, c_new = st.columns(2)
-        with c_reset:
-            if st.button("Reset cart to milk + bread", key="reset_snacks_cart"):
-                st.session_state.proto_cart = list(grocery_seed)
-                st.session_state.proto_last_add = ""
-                st.rerun()
-        with c_new:
-            if st.button("New demo session", key="new_snack_session"):
-                st.session_state.proto_sessions += 1
-                st.session_state.proto_cart = list(grocery_seed)
-                st.session_state.proto_last_add = ""
-                st.rerun()
+        if st.button("New demo session", key="new_snack_session", use_container_width=True):
+            st.session_state.proto_sessions += 1
+            st.session_state.proto_cart = list(grocery_seed)
+            st.session_state.proto_last_add = ""
+            st.rerun()
 
         render_mvp_evidence_strip(
             synthesis=synthesis,
@@ -2743,6 +2745,12 @@ def render_prototype_lab() -> None:
             "compare": "₹460 in many kiranas",
             "why": "Grocery-only shopper seeing Home for the first time",
         }
+
+        if st.button("Reset demo", key="reset_home_demo", use_container_width=True):
+            st.session_state.proto_home_status = "browsing"
+            st.session_state.proto_home_views = 1
+            st.session_state.proto_home_buys = 0
+            st.rerun()
 
         panel_start("Home product page", home_product["why"])
         st.markdown(
@@ -2780,18 +2788,18 @@ def render_prototype_lab() -> None:
                 f"Order placed for **{home_product['name']}** with first-buy protection. "
                 "(Demo only — no payment.)"
             )
-            if st.button("Start return", type="primary", key="home_return"):
+            if st.button("Start return", type="primary", key="home_return", use_container_width=True):
                 st.session_state.proto_home_status = "returned"
                 st.rerun()
             st.caption("One-tap return is the risk reducer that makes first Home trial feel safe.")
         elif status == "returned":
             st.warning("Return started (demo). In production this would open the easy-return flow.")
-            if st.button("Back to product", key="home_back_from_return"):
+            if st.button("Back to product", key="home_back_from_return", use_container_width=True):
                 st.session_state.proto_home_status = "browsing"
                 st.rerun()
         else:
             st.info("Skipped this time — quality distrust still wins unless the guarantee feels real.")
-            if st.button("Reconsider product", key="home_reconsider"):
+            if st.button("Reconsider product", key="home_reconsider", use_container_width=True):
                 st.session_state.proto_home_status = "browsing"
                 st.rerun()
         panel_end()
@@ -2811,11 +2819,6 @@ def render_prototype_lab() -> None:
         with m3:
             metric_card("Guardrail", "<3pp", "return rate vs control")
 
-        if st.button("Reset Home demo", key="reset_home_demo"):
-            st.session_state.proto_home_status = "browsing"
-            st.session_state.proto_home_views += 1
-            st.rerun()
-
         render_mvp_evidence_strip(
             synthesis=synthesis,
             title="Home first-buy guarantee",
@@ -2827,6 +2830,8 @@ def render_prototype_lab() -> None:
                 "or open Findings Board after generating `output/synthesis.json`."
             ),
         )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_evidence_lab(
