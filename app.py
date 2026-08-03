@@ -3268,7 +3268,10 @@ def render_prototype_lab() -> None:
     # ------------------------------------------------------------------
     # Tab B — Home first-buy guarantee
     # ------------------------------------------------------------------
-    with tab_b:
+    else:
+        # ------------------------------------------------------------------
+        # MVP 2 — Home first-buy guarantee
+        # ------------------------------------------------------------------
         if "proto_home_status" not in st.session_state:
             st.session_state.proto_home_status = "browsing"
         if "proto_home_views" not in st.session_state:
