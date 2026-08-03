@@ -2581,6 +2581,8 @@ def main() -> None:
         render_live_pipeline()
     elif page == "Try-it Console":
         render_try_it_console()
+    elif page == "Prototype Lab":
+        render_prototype_lab()
     elif page == "Evidence Lab":
         render_evidence_lab(sentiment, themes, segments, insights)
     elif page == "Methodology":
