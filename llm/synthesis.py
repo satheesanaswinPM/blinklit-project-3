@@ -113,6 +113,52 @@ CATEGORY_COPY = {
     "snacks": "Adjacent to grocery — easiest expansion wedge.",
 }
 
+# Default barrier + experiment per expansion category (P0 product linking).
+CATEGORY_PLAYBOOK: dict[str, tuple[str, str]] = {
+    "snacks": ("hard_to_discover_in_app", "exp_discover_rail"),
+    "home": ("dont_trust_quality_for_new_category", "exp_first_buy_guarantee"),
+    "electronics": ("dont_trust_quality_for_new_category", "exp_first_buy_guarantee"),
+    "beauty": ("dont_trust_quality_for_new_category", "exp_first_buy_guarantee"),
+    "pet": ("dont_trust_quality_for_new_category", "exp_first_buy_guarantee"),
+    "pharmacy": ("dont_trust_quality_for_new_category", "exp_first_buy_guarantee"),
+}
+
+
+def _barrier_for_category(df: pd.DataFrame, category: str, global_barriers: list[dict]) -> str:
+    """Pick the dominant barrier among rows that mention this category."""
+    if "categories_mentioned" not in df.columns or "barriers" not in df.columns:
+        return CATEGORY_PLAYBOOK.get(category, (global_barriers[0]["barrier"] if global_barriers else "hard_to_discover_in_app", ""))[0]
+    mask = (
+        df["categories_mentioned"]
+        .fillna("")
+        .astype(str)
+        .str.contains(rf"(?:^|\|){re.escape(category)}(?:\||$)", regex=True, na=False)
+    )
+    subset = df.loc[mask]
+    if subset.empty:
+        return CATEGORY_PLAYBOOK.get(category, ("dont_trust_quality_for_new_category", ""))[0]
+    counter: Counter[str] = Counter()
+    for cell in subset["barriers"].fillna(""):
+        for b in str(cell).split("|"):
+            b = b.strip()
+            if b:
+                counter[b] += 1
+    if not counter:
+        return CATEGORY_PLAYBOOK.get(category, ("dont_trust_quality_for_new_category", ""))[0]
+    return counter.most_common(1)[0][0]
+
+
+def _experiment_for_barrier(barrier: str, category: str) -> str:
+    playbook = CATEGORY_PLAYBOOK.get(category)
+    if playbook and playbook[0] == barrier:
+        return playbook[1]
+    for e in EXPERIMENT_SEED:
+        if e["barrier"] == barrier:
+            return e["id"]
+    if playbook:
+        return playbook[1]
+    return EXPERIMENT_SEED[0]["id"]
+
 
 def _barrier_counts(df: pd.DataFrame) -> list[dict[str, Any]]:
     counter: Counter[str] = Counter()
@@ -142,9 +188,15 @@ def _category_opportunities(df: pd.DataFrame, barriers: list[dict]) -> list[dict
             c = c.strip()
             if c and c != "grocery":
                 cat_counter[c] += 1
-    top_barrier = barriers[0]["barrier"] if barriers else "hard_to_discover_in_app"
+    fallback_barrier = barriers[0]["barrier"] if barriers else "hard_to_discover_in_app"
     ops = []
     for i, (cat, n) in enumerate(cat_counter.most_common(8), start=1):
+        # Prefer playbook barrier when present; else dominant barrier in category rows
+        playbook = CATEGORY_PLAYBOOK.get(cat)
+        if playbook:
+            primary_barrier = playbook[0]
+        else:
+            primary_barrier = _barrier_for_category(df, cat, barriers) or fallback_barrier
         ops.append(
             {
                 "rank": i,
@@ -152,16 +204,13 @@ def _category_opportunities(df: pd.DataFrame, barriers: list[dict]) -> list[dict
                 "blocked_mentions": int(n),
                 "opportunity_score": round(min(100, 40 + n * 2), 1),
                 "why_now": CATEGORY_COPY.get(cat, "Emerging signal in exploration-tagged corpus."),
-                "primary_barrier_to_attack": top_barrier,
-                "suggested_experiment": next(
-                    (e["id"] for e in EXPERIMENT_SEED if e["barrier"] == top_barrier),
-                    EXPERIMENT_SEED[0]["id"],
-                ),
+                "primary_barrier_to_attack": primary_barrier,
+                "suggested_experiment": _experiment_for_barrier(primary_barrier, cat),
             }
         )
     if not ops:
-        # Fallback opportunities so dashboard isn't empty on thin corpora
-        for i, cat in enumerate(["electronics", "beauty", "snacks", "home"], start=1):
+        for i, cat in enumerate(["snacks", "home", "electronics", "beauty"], start=1):
+            barrier, exp_id = CATEGORY_PLAYBOOK.get(cat, (fallback_barrier, EXPERIMENT_SEED[0]["id"]))
             ops.append(
                 {
                     "rank": i,
@@ -169,8 +218,8 @@ def _category_opportunities(df: pd.DataFrame, barriers: list[dict]) -> list[dict
                     "blocked_mentions": 0,
                     "opportunity_score": 55 - i * 5,
                     "why_now": CATEGORY_COPY.get(cat, ""),
-                    "primary_barrier_to_attack": top_barrier,
-                    "suggested_experiment": EXPERIMENT_SEED[0]["id"],
+                    "primary_barrier_to_attack": barrier,
+                    "suggested_experiment": exp_id,
                 }
             )
     return ops
@@ -203,9 +252,11 @@ def _hypotheses(barriers: list[dict]) -> list[dict[str, Any]]:
             "ETA/coverage anxiety reduces willingness to try unfamiliar categories.",
         ),
     }
+    mention_by_barrier = {b["barrier"]: int(b.get("mentions") or 0) for b in barriers}
     hyps = []
     used = set()
-    for b in barriers[:5]:
+    # Prefer barriers that actually appear, ordered by volume
+    for b in barriers:
         key = b["barrier"]
         if key in mapping and key not in used:
             hid, text = mapping[key]
@@ -214,12 +265,12 @@ def _hypotheses(barriers: list[dict]) -> list[dict[str, Any]]:
                     "id": hid,
                     "statement": text,
                     "linked_barrier": key,
-                    "evidence_mentions": b["mentions"],
+                    "evidence_mentions": mention_by_barrier.get(key, 0),
                     "status": "open",
                 }
             )
             used.add(key)
-    # Always include core set
+    # Always include core set with real counts when available
     for key, (hid, text) in mapping.items():
         if key not in used and hid in {"H1", "H2", "H3", "H4"}:
             hyps.append(
@@ -227,7 +278,7 @@ def _hypotheses(barriers: list[dict]) -> list[dict[str, Any]]:
                     "id": hid,
                     "statement": text,
                     "linked_barrier": key,
-                    "evidence_mentions": 0,
+                    "evidence_mentions": mention_by_barrier.get(key, 0),
                     "status": "open",
                 }
             )
