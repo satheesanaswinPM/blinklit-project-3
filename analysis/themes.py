@@ -211,6 +211,9 @@ def main() -> int:
         print(f"Input not found: {args.inp}", file=sys.stderr)
         return 1
 
+    from discovery_engine.nlp.bertopic_cluster import load_reviews_from_csv
+    from discovery_engine.nlp.embed_cache import load_or_compute_embeddings
+
     reviews = load_reviews_from_csv(str(args.inp), text_col=args.text_col)
     docs = [r.strip() for r in reviews if str(r).strip()]
     print(f"Loaded {len(docs)} non-empty reviews from {args.inp}")
