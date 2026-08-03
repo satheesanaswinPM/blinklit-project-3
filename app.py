@@ -2574,8 +2574,6 @@ def render_prototype_lab() -> None:
     if not synthesis:
         synthesis = ensure_synthesis()
 
-    st.markdown('<div class="proto-lab">', unsafe_allow_html=True)
-
     tab_a, tab_b = st.tabs(
         ["MVP 1: Grocery → Snacks rail", "MVP 2: Home first-buy guarantee"]
     )
