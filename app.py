@@ -1884,12 +1884,12 @@ def render_ai_pipeline_architecture() -> None:
   {stage(
       "07 · Decision surfaces",
       "Streamlit discovery dashboard",
-      "Pre-computed artifacts power Findings, Opportunities, Validation, Live, and Try-it views.",
+      "Pre-computed artifacts power research views plus Prototype Lab for clickable MVP concept tests.",
       [
           ("Findings Board", "exec summary · JTBD · experiments"),
           ("Category Opportunities", "ranked expansion bets"),
           ("Validation Desk", "hypothesis triangulation"),
-          ("Runtime", "read-only · no live scrape"),
+          ("Prototype Lab", "MVP mocks · snacks rail · Home guarantee"),
       ],
   )}
 </div>
