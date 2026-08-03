@@ -102,12 +102,25 @@ python scripts/smoke_check.py
 
 GitHub Actions runs this on pull requests (see `.github/workflows/smoke.yml`).
 
+## Experiment briefs & stakeholder analytics
+
+```bash
+# One-page Markdown brief (also downloadable in Findings Board / Prototype Lab)
+python scripts/export_experiment_brief.py --mvp snacks_rail
+python scripts/export_experiment_brief.py --mvp home_guarantee
+```
+
+Page views and Prototype Lab MVP usage append to `output/stakeholder_events.jsonl` (see Admin → Stakeholder analytics).
+
 ## Phase 0 — gold foundation
 
 ```bash
 python -m scripts.generate_seed_gold --n 220
 python -m scripts.validate_gold
-python -m scripts.run_eval   # identity baseline today — not a real quality score
+# Real heuristic predictions vs gold (barrier F1) — not identity
+python -m scripts.run_eval
+# Optional harness sanity check (should be ~1.0 F1)
+python -m scripts.run_eval --identity
 ```
 
 ## Optional Theme Explorer (advanced)

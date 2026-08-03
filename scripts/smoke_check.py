@@ -126,6 +126,36 @@ def main() -> int:
     check((ROOT / "README.md").read_text(encoding="utf-8").find("Prototype Lab") >= 0, "README mentions Prototype Lab")
     check((ROOT / ".github" / "workflows" / "smoke.yml").exists(), "CI smoke workflow exists")
 
+    # P2: stakeholder events + experiment brief + heuristic eval
+    from discovery_engine.stakeholder_events import log_event, load_events, summarize_events
+    from llm.experiment_brief import build_experiment_brief
+    from discovery_engine.phase0.barrier_predictor import predict_barriers, write_predictions
+
+    ev_path = ROOT / "output" / "_smoke_events.jsonl"
+    try:
+        if ev_path.exists():
+            ev_path.unlink()
+        log_event("page_view", page="Findings Board", path=ev_path)
+        log_event("mvp_tab_view", mvp="snacks_rail", path=ev_path)
+        summary = summarize_events(ev_path)
+        check(summary["total_events"] == 2, "stakeholder events logged")
+        check(summary["page_views"].get("Findings Board") == 1, "page_view counted")
+    finally:
+        if ev_path.exists():
+            ev_path.unlink()
+
+    brief = build_experiment_brief(
+        syn,
+        experiment_id="exp_discover_rail",
+        category="snacks",
+        mvp_title="Snacks rail",
+    )
+    check("Experiment brief" in brief and "exp_discover_rail" in brief, "experiment brief markdown")
+
+    preds = predict_barriers("Didn't even know you sell pet food. It never shows on my homepage.")
+    check("discovery_invisibility" in preds, "barrier predictor discovery cue")
+    check(predict_barriers("Great app!") == ["none"] or "none" in predict_barriers("ok"), "short praise -> none-ish")
+
     if failures:
         print(f"\n{len(failures)} failure(s)")
         return 1
