@@ -3374,10 +3374,12 @@ def render_prototype_lab() -> None:
                 if st.button("Buy with guarantee", type="primary", key="home_buy", use_container_width=True):
                     st.session_state.proto_home_status = "bought"
                     st.session_state.proto_home_buys += 1
+                    log_event("mvp_action", mvp="home_guarantee", action="buy_with_guarantee")
                     st.rerun()
             with b2:
                 if st.button("Skip", key="home_skip", use_container_width=True):
                     st.session_state.proto_home_status = "skipped"
+                    log_event("mvp_action", mvp="home_guarantee", action="skip")
                     st.rerun()
         elif status == "bought":
             st.success(
@@ -3386,6 +3388,7 @@ def render_prototype_lab() -> None:
             )
             if st.button("Start return", type="primary", key="home_return", use_container_width=True):
                 st.session_state.proto_home_status = "returned"
+                log_event("mvp_action", mvp="home_guarantee", action="start_return")
                 st.rerun()
             st.caption("One-tap return is the risk reducer that makes first Home trial feel safe.")
         elif status == "returned":
