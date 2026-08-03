@@ -382,14 +382,16 @@ def _chart_layout(fig: go.Figure, *, height: int | None = None) -> go.Figure:
     return fig
 
 
-def _show_chart(fig: go.Figure) -> None:
+def _show_chart(fig: go.Figure, *, key: str | None = None) -> None:
     """Render Plotly without Streamlit theme override (keeps light-mode labels readable)."""
-    st.plotly_chart(
-        fig,
-        use_container_width=True,
-        config=PLOTLY_CONFIG,
-        theme=None,
-    )
+    kwargs = {
+        "use_container_width": True,
+        "config": PLOTLY_CONFIG,
+        "theme": None,
+    }
+    if key:
+        kwargs["key"] = key
+    st.plotly_chart(fig, **kwargs)
 
 
 def sentiment_pie(df: pd.DataFrame) -> go.Figure:
