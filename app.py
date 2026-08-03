@@ -2444,7 +2444,7 @@ def render_try_it_console() -> None:
 
 
 def render_prototype_lab() -> None:
-    """Clickable MVP mock workspace for category-expansion concepts."""
+    """Clickable MVP mocks for snacks attach + Home first-buy guarantee."""
     page_header(
         "Prototype Lab",
         "Clickable MVP mocks for category expansion — not the live Blinkit app.",
@@ -2453,22 +2453,245 @@ def render_prototype_lab() -> None:
         "Research prototypes for stakeholder demos. Interactions stay in this dashboard only — "
         "no real cart, payments, or Blinkit backend."
     )
-    panel_start(
-        "Coming next",
-        "Interactive mocks for the two highest-leverage MVPs from synthesis.",
-    )
-    st.markdown(
-        """
-**MVP 1 — Grocery → Snacks rail**  
-Contextual “Also useful tonight” snacks strip after a grocery add (discovery + habit).
 
-**MVP 2 — Home first-buy guarantee**  
-Quality badge + one-tap easy return on a first Home purchase (trust / risk).
-
-Use **Category Opportunities** and **Findings Board** for the evidence behind these bets.
-        """
+    tab_a, tab_b = st.tabs(
+        ["MVP 1: Grocery → Snacks rail", "MVP 2: Home first-buy guarantee"]
     )
-    panel_end()
+
+    # ------------------------------------------------------------------
+    # Tab A — Grocery → Snacks rail
+    # ------------------------------------------------------------------
+    with tab_a:
+        grocery_seed = [
+            {"id": "milk", "name": "Amul Taaza Milk 1L", "price": 58, "category": "grocery"},
+            {"id": "bread", "name": "Britannia Bread", "price": 45, "category": "grocery"},
+        ]
+        snack_catalog = [
+            {
+                "id": "chips",
+                "name": "Lay's Classic Salted",
+                "price": 20,
+                "all_in": 29,
+                "badge": "Fresh batch · quality checked",
+            },
+            {
+                "id": "cookies",
+                "name": "Dark Fantasy Choco Fills",
+                "price": 35,
+                "all_in": 44,
+                "badge": "Freshness sealed",
+            },
+            {
+                "id": "drink",
+                "name": "Coca-Cola 750ml",
+                "price": 40,
+                "all_in": 49,
+                "badge": "Cold & ready",
+            },
+            {
+                "id": "nuts",
+                "name": "Happilo Mixed Nuts",
+                "price": 149,
+                "all_in": 158,
+                "badge": "Quality guaranteed",
+            },
+        ]
+
+        if "proto_cart" not in st.session_state:
+            st.session_state.proto_cart = list(grocery_seed)
+        if "proto_sessions" not in st.session_state:
+            st.session_state.proto_sessions = 1
+        if "proto_snack_adds" not in st.session_state:
+            st.session_state.proto_snack_adds = 0
+        if "proto_last_add" not in st.session_state:
+            st.session_state.proto_last_add = ""
+
+        panel_start("Your grocery cart", "Habitual reorder session already started")
+        cart = st.session_state.proto_cart
+        for item in cart:
+            tag = "snack" if item.get("category") == "snacks" else "grocery"
+            st.markdown(f"- **{item['name']}** — ₹{item['price']}  `{tag}`")
+        cart_total = sum(int(i["price"]) for i in cart)
+        st.caption(f"Cart total: ₹{cart_total}")
+        panel_end()
+
+        panel_start(
+            "Also useful tonight",
+            "Contextual snacks rail after grocery add — discovery without leaving the reorder flow",
+        )
+        cols = st.columns(4)
+        cart_ids = {i["id"] for i in cart}
+        for col, snack in zip(cols, snack_catalog):
+            with col:
+                st.markdown(
+                    f"""
+<div class="proto-product">
+  <div class="name">{html.escape(snack["name"])}</div>
+  <div class="price">₹{snack["price"]}</div>
+  <div class="muted">All-in ₹{snack["all_in"]} (item + fees)</div>
+  <div class="proto-badge">{html.escape(snack["badge"])}</div>
+</div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                already = snack["id"] in cart_ids
+                if st.button(
+                    "Added" if already else "Add",
+                    key=f"add_snack_{snack['id']}",
+                    disabled=already,
+                    use_container_width=True,
+                    type="primary" if not already else "secondary",
+                ):
+                    st.session_state.proto_cart.append(
+                        {
+                            "id": snack["id"],
+                            "name": snack["name"],
+                            "price": snack["price"],
+                            "category": "snacks",
+                        }
+                    )
+                    st.session_state.proto_snack_adds += 1
+                    st.session_state.proto_last_add = snack["name"]
+                    st.rerun()
+        panel_end()
+
+        if st.session_state.proto_last_add:
+            st.success(
+                f"Attached **{st.session_state.proto_last_add}** to this grocery session. "
+                "That’s the category-expansion moment."
+            )
+
+        snacks_in_cart = sum(1 for i in cart if i.get("category") == "snacks")
+        sessions = max(int(st.session_state.proto_sessions), 1)
+        # Demo metric: sessions with ≥1 snack attach, approximated by snack add events / sessions
+        attach_rate = min(1.0, st.session_state.proto_snack_adds / sessions)
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            metric_card(
+                "Session attach rate",
+                f"{attach_rate:.0%}",
+                "snacks added ÷ demo sessions",
+                accent="#32D583",
+            )
+        with m2:
+            metric_card("Snacks in cart", str(snacks_in_cart), "this session")
+        with m3:
+            metric_card("Demo sessions", str(sessions), "reset starts a new session")
+
+        c_reset, c_new = st.columns(2)
+        with c_reset:
+            if st.button("Reset cart to milk + bread", key="reset_snacks_cart"):
+                st.session_state.proto_cart = list(grocery_seed)
+                st.session_state.proto_last_add = ""
+                st.rerun()
+        with c_new:
+            if st.button("New demo session", key="new_snack_session"):
+                st.session_state.proto_sessions += 1
+                st.session_state.proto_cart = list(grocery_seed)
+                st.session_state.proto_last_add = ""
+                st.rerun()
+
+        st.caption(
+            "Why this MVP: attacks **discovery + habit during reorder**. "
+            "Snacks is the **#1 category opportunity** (adjacent to grocery, easiest attach, "
+            "highest blocked-intent volume in synthesis)."
+        )
+
+    # ------------------------------------------------------------------
+    # Tab B — Home first-buy guarantee
+    # ------------------------------------------------------------------
+    with tab_b:
+        if "proto_home_status" not in st.session_state:
+            st.session_state.proto_home_status = "browsing"  # browsing | bought | returned | skipped
+        if "proto_home_views" not in st.session_state:
+            st.session_state.proto_home_views = 1
+        if "proto_home_buys" not in st.session_state:
+            st.session_state.proto_home_buys = 0
+
+        home_product = {
+            "name": "Surf Excel Matic Front Load 2kg",
+            "category": "Home · Cleaning",
+            "price": 429,
+            "compare": "₹460 in many kiranas",
+            "why": "Grocery-only shopper seeing Home for the first time",
+        }
+
+        panel_start("Home product page", home_product["why"])
+        st.markdown(
+            f"""
+<div class="proto-product">
+  <div class="name">{html.escape(home_product["name"])}</div>
+  <div class="muted">{html.escape(home_product["category"])}</div>
+  <div class="price" style="margin-top:0.45rem;font-size:1.25rem;">₹{home_product["price"]}</div>
+  <div class="muted">{html.escape(home_product["compare"])}</div>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            '<div class="proto-guarantee">'
+            "First Home order protected — easy return if you’re not happy."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+        status = st.session_state.proto_home_status
+        if status == "browsing":
+            b1, b2 = st.columns(2)
+            with b1:
+                if st.button("Buy with guarantee", type="primary", key="home_buy", use_container_width=True):
+                    st.session_state.proto_home_status = "bought"
+                    st.session_state.proto_home_buys += 1
+                    st.rerun()
+            with b2:
+                if st.button("Skip", key="home_skip", use_container_width=True):
+                    st.session_state.proto_home_status = "skipped"
+                    st.rerun()
+        elif status == "bought":
+            st.success(
+                f"Order placed for **{home_product['name']}** with first-buy protection. "
+                "(Demo only — no payment.)"
+            )
+            if st.button("Start return", type="primary", key="home_return"):
+                st.session_state.proto_home_status = "returned"
+                st.rerun()
+            st.caption("One-tap return is the risk reducer that makes first Home trial feel safe.")
+        elif status == "returned":
+            st.warning("Return started (demo). In production this would open the easy-return flow.")
+            if st.button("Back to product", key="home_back_from_return"):
+                st.session_state.proto_home_status = "browsing"
+                st.rerun()
+        else:  # skipped
+            st.info("Skipped this time — quality distrust still wins unless the guarantee feels real.")
+            if st.button("Reconsider product", key="home_reconsider"):
+                st.session_state.proto_home_status = "browsing"
+                st.rerun()
+        panel_end()
+
+        views = max(int(st.session_state.proto_home_views), 1)
+        conversion = st.session_state.proto_home_buys / views
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            metric_card(
+                "First-time Home conversion",
+                f"{conversion:.0%}",
+                "buys ÷ demo product views",
+                accent="#32D583",
+            )
+        with m2:
+            metric_card("Buys (demo)", str(st.session_state.proto_home_buys), "with guarantee")
+        with m3:
+            metric_card("Guardrail", "<3pp", "return rate vs control")
+
+        if st.button("Reset Home demo", key="reset_home_demo"):
+            st.session_state.proto_home_status = "browsing"
+            st.session_state.proto_home_views += 1
+            st.rerun()
+
+        st.caption(
+            "Why this MVP: attacks **quality distrust** (top barrier, ~277 mentions). "
+            "Home is the **#2 category opportunity** — higher basket value once the first buy feels safe."
+        )
 
 
 def render_evidence_lab(
