@@ -2495,6 +2495,177 @@ def _find_barrier(synthesis: dict, barrier_id: str) -> dict:
     return {}
 
 
+@st.cache_data(show_spinner=False)
+def _load_rated_reviews(_mtime: float = 0.0) -> pd.DataFrame:
+    """Reviews with usable numeric ratings for trust/rating stats."""
+    path = DATA_PROC / "merged_reviews.csv"
+    if not path.exists():
+        play = DATA_RAW / "blinkit_play_reviews.csv"
+        if not play.exists():
+            return pd.DataFrame(columns=["text", "rating", "source"])
+        df = pd.read_csv(play)
+        out = pd.DataFrame(
+            {
+                "text": df.get("Review", pd.Series(dtype=str)).fillna("").astype(str),
+                "rating": pd.to_numeric(df.get("Rating"), errors="coerce"),
+                "source": "play_store",
+            }
+        )
+    else:
+        df = pd.read_csv(path)
+        out = pd.DataFrame(
+            {
+                "text": df.get("text", pd.Series(dtype=str)).fillna("").astype(str),
+                "rating": pd.to_numeric(df.get("rating"), errors="coerce"),
+                "source": df.get("source", pd.Series(dtype=str)).fillna("").astype(str),
+            }
+        )
+    out = out[(out["text"].str.len() >= 20) & out["rating"].between(1, 5)]
+    out["rating"] = out["rating"].round().astype(int)
+    return out.reset_index(drop=True)
+
+
+def build_product_rating_trust(
+    *,
+    keywords: list[str],
+    fallback_comments: list[dict],
+    min_matches: int = 8,
+) -> dict:
+    """
+    Rating distribution + top 5 comments for a prototype product.
+    Uses corpus matches when enough exist; otherwise seeded fallbacks.
+    """
+    df = _load_rated_reviews(_mtime(DATA_PROC / "merged_reviews.csv"))
+    matched = df
+    if keywords and not df.empty:
+        pattern = "|".join(re.escape(k.lower()) for k in keywords if k.strip())
+        if pattern:
+            matched = df[df["text"].str.lower().str.contains(pattern, na=False, regex=True)]
+
+    used_fallback = len(matched) < min_matches
+    if used_fallback:
+        rows = []
+        for item in fallback_comments:
+            rows.append(
+                {
+                    "text": str(item.get("text") or ""),
+                    "rating": int(item.get("rating") or 5),
+                    "source": str(item.get("source") or "prototype"),
+                }
+            )
+        matched = pd.DataFrame(rows)
+
+    counts = {star: 0 for star in range(1, 6)}
+    for star, n in matched["rating"].value_counts().items():
+        counts[int(star)] = int(n)
+    total = max(int(len(matched)), 1)
+    avg = float(matched["rating"].mean()) if len(matched) else 0.0
+
+    # Prefer higher ratings + substantive text for "top comments"
+    ranked = matched.assign(_len=matched["text"].str.len()).sort_values(
+        by=["rating", "_len"], ascending=[False, False]
+    )
+    top = []
+    for _, row in ranked.head(5).iterrows():
+        quote = str(row["text"]).strip().replace("\n", " ")
+        if len(quote) > 180:
+            quote = quote[:177].rstrip() + "…"
+        top.append(
+            {
+                "rating": int(row["rating"]),
+                "text": quote,
+                "source": str(row.get("source") or ""),
+            }
+        )
+
+    return {
+        "avg": round(avg, 2),
+        "total": int(len(matched)),
+        "counts": counts,
+        "top_comments": top,
+        "used_fallback": used_fallback,
+    }
+
+
+def render_product_trust_panel(
+    *,
+    product_name: str,
+    keywords: list[str],
+    fallback_comments: list[dict],
+    key_prefix: str,
+) -> None:
+    """Show star-rating stats + top 5 comments to help shoppers build trust."""
+    trust = build_product_rating_trust(keywords=keywords, fallback_comments=fallback_comments)
+    counts = trust["counts"]
+    total = max(trust["total"], 1)
+
+    with st.expander(f"Ratings & top comments · {product_name}", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            metric_card("Average rating", f"{trust['avg']:.1f}★", f"{trust['total']} ratings")
+        with c2:
+            metric_card("5-star share", f"{counts.get(5, 0) / total:.0%}", f"{counts.get(5, 0)} reviews")
+        with c3:
+            metric_card(
+                "Evidence source",
+                "Corpus" if not trust["used_fallback"] else "Demo sample",
+                "helps first-time buyers trust quality",
+            )
+
+        # Per-star statistics
+        dist_rows = []
+        for star in range(5, 0, -1):
+            n = counts.get(star, 0)
+            dist_rows.append(
+                {
+                    "Rating": f"{star}★",
+                    "Count": n,
+                    "Share": round(n / total, 3),
+                }
+            )
+        dist_df = pd.DataFrame(dist_rows)
+
+        chart_col, table_col = st.columns([1.2, 1])
+        with chart_col:
+            fig = go.Figure(
+                go.Bar(
+                    x=dist_df["Count"],
+                    y=dist_df["Rating"],
+                    orientation="h",
+                    marker_color="#32D583",
+                    text=[f"{int(r['Count'])} ({r['Share']:.0%})" for _, r in dist_df.iterrows()],
+                    textposition="outside",
+                    cliponaxis=False,
+                )
+            )
+            fig.update_layout(
+                title="Rating breakdown",
+                margin=dict(l=10, r=40, t=40, b=10),
+                height=220,
+                yaxis=dict(autorange="reversed"),
+            )
+            _show_chart(_chart_layout(fig, height=220))
+        with table_col:
+            st.markdown("**Per-rating stats**")
+            st.dataframe(
+                dist_df.assign(Share=lambda d: (d["Share"] * 100).round(1).astype(str) + "%"),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+        st.markdown("**Top 5 customer comments**")
+        for i, comment in enumerate(trust["top_comments"], start=1):
+            stars = "★" * int(comment["rating"]) + "☆" * (5 - int(comment["rating"]))
+            st.markdown(f"**{i}. {stars}** — {comment['text']}")
+            if comment.get("source"):
+                st.caption(f"Source: {comment['source']}")
+
+        st.caption(
+            "Trust cue for category expansion: shoppers can see how others rated this type of product "
+            "before trying it for the first time."
+        )
+
+
 def render_mvp_evidence_strip(
     *,
     synthesis: dict,
