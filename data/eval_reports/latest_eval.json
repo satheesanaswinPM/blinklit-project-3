@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-07-28T11:33:02.149572+00:00",
+  "run_at": "2026-08-03T19:28:54.304486+00:00",
   "n_gold": 220,
   "n_pred": 220,
   "n_paired": 220,
@@ -29,8 +29,8 @@
     "support": {
       "habit_mental_model": 47,
       "cognitive_load": 19,
-      "past_bad_experience": 28,
       "freshness_spoilage": 47,
+      "past_bad_experience": 28,
       "info_trust_gap": 55,
       "trust_quality": 36,
       "brand_lock_in": 18,
@@ -64,19 +64,19 @@
       "staples": 1.0
     },
     "support": {
+      "snacks": 55,
       "staples": 28,
       "fruits_vegetables": 37,
       "beverages": 46,
-      "snacks": 55,
-      "dairy_eggs": 38,
       "bakery": 19,
+      "dairy_eggs": 38,
       "meat_seafood": 19,
       "organic_specialty": 27,
       "personal_care": 9,
       "baby_care": 9,
       "pet_care": 9,
-      "pharma": 18,
       "household": 18,
+      "pharma": 18,
       "off_topic": 18,
       "packaged_food": 9
     }
@@ -95,8 +95,8 @@
       "receptive_segments": 1.0
     },
     "support": {
-      "barrier_taxonomy": 166,
       "habit_drivers": 65,
+      "barrier_taxonomy": 166,
       "opportunity_briefs": 92,
       "info_needs": 55,
       "receptive_segments": 63,
