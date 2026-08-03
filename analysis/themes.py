@@ -32,11 +32,6 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from discovery_engine.env_loader import load_env  # noqa: E402
-from discovery_engine.nlp.bertopic_cluster import (  # noqa: E402
-    _build_topic_model,
-    load_reviews_from_csv,
-)
-from discovery_engine.nlp.embed_cache import load_or_compute_embeddings  # noqa: E402
 
 load_env()
 
