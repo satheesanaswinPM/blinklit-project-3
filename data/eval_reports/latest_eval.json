@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-08-03T19:28:54.304486+00:00",
+  "run_at": "2026-08-03T19:54:53.656534+00:00",
   "n_gold": 220,
   "n_pred": 220,
   "n_paired": 220,
@@ -8,29 +8,29 @@
   "grounding_k": 1,
   "grounding_failures": [],
   "barrier": {
-    "micro_precision": 1.0,
-    "micro_recall": 1.0,
-    "micro_f1": 1.0,
-    "macro_f1": 1.0,
+    "micro_precision": 0.918429003021148,
+    "micro_recall": 0.8491620111731844,
+    "micro_f1": 0.8824383164005806,
+    "macro_f1": 0.8835334494629007,
     "per_class_f1": {
-      "assortment_doubt": 1.0,
+      "assortment_doubt": 0.6666666666666666,
       "brand_lock_in": 1.0,
       "cognitive_load": 1.0,
       "discovery_invisibility": 1.0,
-      "freshness_spoilage": 1.0,
-      "habit_mental_model": 1.0,
+      "freshness_spoilage": 0.763157894736842,
+      "habit_mental_model": 0.8085106382978723,
       "info_trust_gap": 1.0,
       "none": 1.0,
-      "past_bad_experience": 1.0,
-      "price_value": 1.0,
+      "past_bad_experience": 0.8085106382978724,
+      "price_value": 0.6666666666666666,
       "search_vocab_gap": 1.0,
-      "trust_quality": 1.0
+      "trust_quality": 0.888888888888889
     },
     "support": {
       "habit_mental_model": 47,
       "cognitive_load": 19,
-      "freshness_spoilage": 47,
       "past_bad_experience": 28,
+      "freshness_spoilage": 47,
       "info_trust_gap": 55,
       "trust_quality": 36,
       "brand_lock_in": 18,
@@ -43,9 +43,9 @@
   },
   "category": {
     "micro_precision": 1.0,
-    "micro_recall": 1.0,
-    "micro_f1": 1.0,
-    "macro_f1": 1.0,
+    "micro_recall": 0.9220055710306406,
+    "micro_f1": 0.9594202898550726,
+    "macro_f1": 0.9499516908212561,
     "per_class_f1": {
       "baby_care": 1.0,
       "bakery": 1.0,
@@ -54,20 +54,20 @@
       "fruits_vegetables": 1.0,
       "household": 1.0,
       "meat_seafood": 1.0,
-      "off_topic": 1.0,
-      "organic_specialty": 1.0,
+      "off_topic": 0.6666666666666666,
+      "organic_specialty": 0.8,
       "packaged_food": 1.0,
       "personal_care": 1.0,
       "pet_care": 1.0,
       "pharma": 1.0,
       "snacks": 1.0,
-      "staples": 1.0
+      "staples": 0.782608695652174
     },
     "support": {
       "snacks": 55,
-      "staples": 28,
-      "fruits_vegetables": 37,
       "beverages": 46,
+      "fruits_vegetables": 37,
+      "staples": 28,
       "bakery": 19,
       "dairy_eggs": 38,
       "meat_seafood": 19,
@@ -82,17 +82,17 @@
     }
   },
   "insight_type": {
-    "micro_precision": 1.0,
-    "micro_recall": 1.0,
-    "micro_f1": 1.0,
-    "macro_f1": 1.0,
+    "micro_precision": 0.7067307692307693,
+    "micro_recall": 0.8909090909090909,
+    "micro_f1": 0.7882037533512064,
+    "macro_f1": 0.7954215265961097,
     "per_class_f1": {
-      "barrier_taxonomy": 1.0,
-      "discovery_path_map": 1.0,
-      "habit_drivers": 1.0,
+      "barrier_taxonomy": 0.8806366047745359,
+      "discovery_path_map": 0.9090909090909091,
+      "habit_drivers": 0.8615384615384615,
       "info_needs": 1.0,
-      "opportunity_briefs": 1.0,
-      "receptive_segments": 1.0
+      "opportunity_briefs": 0.6258503401360545,
+      "receptive_segments": 0.49541284403669733
     },
     "support": {
       "habit_drivers": 65,
@@ -103,8 +103,9 @@
       "discovery_path_map": 54
     }
   },
-  "sentiment_accuracy": 1.0,
-  "theme_precision_at_5": 1.0,
+  "sentiment_accuracy": 0.5213270142180095,
+  "theme_precision_at_5": 0.0,
   "missing_predictions": [],
-  "extra_predictions": []
+  "extra_predictions": [],
+  "prediction_mode": "heuristic"
 }

@@ -64,7 +64,11 @@ def main() -> int:
         md = path.read_text(encoding="utf-8")
 
     print(f"Wrote {path}")
-    print(md[:400] + ("…" if len(md) > 400 else ""))
+    preview = md[:400] + ("..." if len(md) > 400 else "")
+    try:
+        print(preview)
+    except UnicodeEncodeError:
+        print(preview.encode("ascii", "replace").decode("ascii"))
     return 0
 
 

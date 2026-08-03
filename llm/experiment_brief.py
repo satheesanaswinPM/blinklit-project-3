@@ -15,14 +15,14 @@ MVP_PRESETS: dict[str, dict[str, str]] = {
     "snacks_rail": {
         "experiment_id": "exp_discover_rail",
         "category": "snacks",
-        "mvp_title": "Grocery → Snacks discovery rail",
-        "prototype": "Prototype Lab · MVP 1",
+        "mvp_title": "Grocery to Snacks discovery rail",
+        "prototype": "Prototype Lab / MVP 1",
     },
     "home_guarantee": {
         "experiment_id": "exp_first_buy_guarantee",
         "category": "home",
         "mvp_title": "Home first-buy quality guarantee",
-        "prototype": "Prototype Lab · MVP 2",
+        "prototype": "Prototype Lab / MVP 2",
     },
 }
 
