@@ -157,7 +157,6 @@ def main() -> int:
     check(predict_barriers("Great app!") == ["none"] or "none" in predict_barriers("ok"), "short praise -> none-ish")
 
     check(hasattr(app, "render_experiment_brief_export"), "brief export UI helper exists")
-    check(hasattr(app, "log_event") or True, "events module wired via import")
 
     if failures:
         print(f"\n{len(failures)} failure(s)")
