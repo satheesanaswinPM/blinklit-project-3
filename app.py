@@ -33,9 +33,17 @@ ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "output"
 DATA_RAW = ROOT / "data" / "raw"
 DATA_PROC = ROOT / "data" / "processed"
+HYPOTHESIS_REVIEWS_PATH = OUTPUT / "hypothesis_reviews.json"
 
 PRIMARY_QUESTION = "Why don't Blinkit users explore new categories?"
 
+REVIEW_DECISIONS = ("open", "approved", "rejected", "needs_evidence")
+REVIEW_CHECKLIST = [
+    ("quote_on_topic", "Example quote is about category exploration (not generic app praise)"),
+    ("mentions_plausible", "Evidence mentions look plausible vs triangulation strength"),
+    ("experiment_link", "Linked experiment / category opportunity matches the barrier"),
+    ("not_theme_noise", "Claim is not driven by low-info theme noise alone"),
+]
 SENTIMENT_COLORS = {
     "Positive": "#12B76A",
     "Neutral": "#98A2B3",
