@@ -1957,7 +1957,7 @@ def render_methodology() -> None:
 | Segments | KMeans (k=4) + prototype labeling | `output/user_segments.csv` |
 | Insights | LLM grounded on themes/sentiment/segments (heuristic fallback) | `output/insights.json` |
 
-The Streamlit dashboard and Theme Explorer API read these artifacts — they do not re-scrape on every page load.
+The Streamlit dashboard is the primary research surface; it reads these artifacts and does not re-scrape on every page load. (Optional Theme Explorer API is advanced-only.)
         """
     )
     panel_end()
