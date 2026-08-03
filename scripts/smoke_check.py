@@ -98,6 +98,34 @@ def main() -> int:
     check(trust["used_fallback"] is True, "trust panel falls back when matches thin")
     check(trust["top_comments"][0].get("evidence_label", "").startswith("Demo"), "demo evidence label")
 
+    # Human review persistence (Validation Desk)
+    review_path = ROOT / "output" / "_smoke_hypothesis_reviews.json"
+    try:
+        if review_path.exists():
+            review_path.unlink()
+        saved = app.save_hypothesis_reviews(
+            {
+                "H1": {
+                    "decision": "approved",
+                    "checklist": {"quote_on_topic": True},
+                    "note": "smoke",
+                }
+            },
+            path=review_path,
+        )
+        loaded = app.load_hypothesis_reviews(saved)
+        check(loaded["reviews"]["H1"]["decision"] == "approved", "hypothesis review save/load")
+        ht2 = app.build_hypothesis_triangulation(exp, syn, reviews=loaded)
+        if not ht2.empty and "H1" in ht2["Hypothesis"].values:
+            status = str(ht2.loc[ht2["Hypothesis"] == "H1", "Status"].iloc[0])
+            check(status == "approved", "triangulation reflects human review status")
+    finally:
+        if review_path.exists():
+            review_path.unlink()
+
+    check((ROOT / "README.md").read_text(encoding="utf-8").find("Prototype Lab") >= 0, "README mentions Prototype Lab")
+    check((ROOT / ".github" / "workflows" / "smoke.yml").exists(), "CI smoke workflow exists")
+
     if failures:
         print(f"\n{len(failures)} failure(s)")
         return 1
