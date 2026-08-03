@@ -2049,6 +2049,78 @@ The Streamlit dashboard is the primary research surface; it reads these artifact
 # ---------------------------------------------------------------------------
 
 
+def render_experiment_brief_export(synthesis: dict) -> None:
+    """One-page Markdown experiment brief download (P2)."""
+    from llm.experiment_brief import MVP_PRESETS, build_experiment_brief, write_experiment_brief
+
+    panel_start(
+        "Export experiment brief",
+        "One-page Markdown for stakeholder review — synthesis + chosen MVP.",
+    )
+    if not synthesis:
+        st.info("Generate synthesis first.")
+        panel_end()
+        return
+
+    preset_labels = {
+        "snacks_rail": "MVP 1 · Snacks discovery rail",
+        "home_guarantee": "MVP 2 · Home first-buy guarantee",
+        "custom": "Custom experiment id",
+    }
+    pick = st.selectbox(
+        "Brief for",
+        list(preset_labels.keys()),
+        format_func=lambda k: preset_labels[k],
+        key="brief_preset",
+    )
+    if pick == "custom":
+        experiments = synthesis.get("testable_experiments") or []
+        ids = [str(e.get("id")) for e in experiments if e.get("id")]
+        exp_id = st.selectbox("Experiment id", ids or ["exp_discover_rail"], key="brief_exp_id")
+        category = st.text_input("Category (optional)", value="", key="brief_category") or None
+        mvp_title = None
+        prototype = None
+    else:
+        preset = MVP_PRESETS[pick]
+        exp_id = preset["experiment_id"]
+        category = preset.get("category")
+        mvp_title = preset.get("mvp_title")
+        prototype = preset.get("prototype")
+
+    md = build_experiment_brief(
+        synthesis,
+        experiment_id=exp_id,
+        category=category,
+        mvp_title=mvp_title,
+        prototype=prototype,
+    )
+    c1, c2 = st.columns(2)
+    with c1:
+        st.download_button(
+            "Download brief (.md)",
+            data=md,
+            file_name=f"{exp_id}_brief.md",
+            mime="text/markdown",
+            type="primary",
+            key="dl_experiment_brief",
+            use_container_width=True,
+        )
+    with c2:
+        if st.button("Save to output/briefs/", use_container_width=True, key="save_experiment_brief"):
+            path = write_experiment_brief(
+                synthesis,
+                experiment_id=exp_id,
+                category=category,
+                mvp_title=mvp_title,
+                prototype=prototype,
+            )
+            log_event("brief_export", experiment_id=exp_id, category=category, path=str(path.name))
+            st.success(f"Saved → {path.relative_to(ROOT)}")
+    with st.expander("Preview", expanded=False):
+        st.markdown(md)
+    panel_end()
+
+
 def render_findings_board(synthesis: dict, insights: dict) -> None:
     page_header(
         "Findings Board",
