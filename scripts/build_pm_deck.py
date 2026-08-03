@@ -8,9 +8,7 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
-from pptx.oxml.ns import nsmap
-from pptx.oxml import parse_xml
-from pptx.util import Emu, Inches, Pt
+from pptx.util import Inches, Pt
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "Category_Discovery_Engine_Deck.pptx"
