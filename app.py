@@ -926,6 +926,50 @@ def inject_styles() -> None:
             font-size: 0.75rem;
             font-weight: 700;
           }}
+          .proto-product {{
+            border: 1px solid {tok["line"]};
+            border-radius: 14px;
+            background: {tok["panel"]};
+            padding: 0.85rem 0.9rem 0.95rem;
+            box-shadow: var(--shadow);
+            height: 100%;
+          }}
+          .proto-product .name {{
+            font-family: "Sora", sans-serif;
+            font-weight: 700;
+            font-size: 0.98rem;
+            color: {tok["ink"]} !important;
+            margin-bottom: 0.35rem;
+          }}
+          .proto-product .price {{
+            font-size: 0.9rem;
+            color: {tok["ink"]} !important;
+            font-weight: 650;
+          }}
+          .proto-product .muted {{
+            color: {tok["muted"]} !important;
+            font-size: 0.8rem;
+            margin-top: 0.15rem;
+          }}
+          .proto-badge {{
+            display: inline-block;
+            margin-top: 0.45rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            background: {tok["accent_soft"]};
+            color: {tok["accent"]} !important;
+            font-size: 0.72rem;
+            font-weight: 700;
+          }}
+          .proto-guarantee {{
+            border: 1px solid color-mix(in srgb, {tok["accent"]} 40%, {tok["line"]});
+            border-radius: 14px;
+            background: {tok["accent_soft"]};
+            padding: 0.85rem 1rem;
+            color: {tok["ink"]} !important;
+            font-weight: 650;
+            margin: 0.75rem 0 1rem;
+          }}
           .ai-arch {{
             display: flex;
             flex-direction: column;
